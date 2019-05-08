@@ -1,10 +1,16 @@
 #pragma once
 
 #include "ofMain.h"
-#include "triangle.h"
+#include "tree.hh"
 
-//#define _USE_AXIDRAW_
+#define _USE_AXIDRAW_
 
+struct Triangle {
+    ofVec2f pointA;
+    ofVec2f pointB;
+    ofVec2f pointC;
+    
+};
 class ofApp : public ofBaseApp{
 public:
     void setup();
@@ -24,9 +30,11 @@ public:
     void gotMessage(ofMessage msg);
 
     ofSerial serial;
+    ofSerial serialArduino;
+    bool ready;
     vector<ofPolyline> lines;
     vector<ofPolyline> linesCurrent;
-    vector<Triangle> triangles;
+//    vector<Triangle> triangles;
 private:
     void raiseBrush();
     void lowerBrush();

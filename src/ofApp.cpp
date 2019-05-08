@@ -2,11 +2,9 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+    ready = true;
     scanSerial();
     setupPlotter();
-
-    // TODO:
-    // setupArduino
 
     ofBackground(0);
     ofColor(255);
@@ -17,7 +15,9 @@ void ofApp::setup(){
     outline.addVertex(0, ofGetHeight());
     outline.addVertex(ofGetWidth(), ofGetHeight());
     outline.addVertex(ofGetWidth(), 0);
+    outline.addVertex(0,0);
     lines.push_back(outline);
+    linesCurrent.push_back(outline);
     setupTriangles();
 }
 
@@ -25,7 +25,33 @@ void ofApp::setup(){
 void ofApp::update(){
     // TODO: read and store sensor values
 
-    // TODO: if there is nothing left to draw, generate next division
+    if (ready){
+        // TODO: set timer for 10 seconds?
+        // TODO: if there is nothing left to draw, generate next division
+    }
+
+    tree<Triangle> tr;
+    tree<Triangle>::iterator top, one, loc;
+    top = tr.begin();
+
+//    Triangle test = { ofVec2f(0, 0), ofVec2f(100, 0), ofVec2f(0, 100)};
+    tr.insert(top, { ofVec2f(0, 0), ofVec2f(100, 0), ofVec2f(0, 100)});
+    tr.insert(top, { ofVec2f(111, 0), ofVec2f(111, 111), ofVec2f(0, 111)});
+    one = tr.insert(top, { ofVec2f(222, 0), ofVec2f(222, 222), ofVec2f(0, 222)});
+    tr.append_child(one, { ofVec2f(333, 0), ofVec2f(333, 333), ofVec2f(0, 333)});
+//    cout << "Original tree" << endl;
+    tree<Triangle>::leaf_iterator iter=tr.begin_leaf();
+    while(iter!=tr.end()) {
+//        tr.append_child(iter, { ofVec2f(444, 0), ofVec2f(444, 444), ofVec2f(0, 444)});
+//        cout << (*iter).pointA << endl;
+        ++iter;
+    }
+//    cout << "Modify tree" << endl;
+    iter=tr.begin_leaf();
+    while(iter!=tr.end()) {
+//        cout << (*iter).pointA << endl;
+        ++iter;
+    }
 }
 
 //--------------------------------------------------------------
@@ -35,6 +61,7 @@ void ofApp::draw(){
         lines[i].draw();
     }
 
+    ready = false;
     // draw new lines with AxiDraw
     while (!linesCurrent.empty())
     {
@@ -42,6 +69,7 @@ void ofApp::draw(){
         // TODO: send instructions to AxiDraw
         linesCurrent.pop_back();
     }
+    ready = true;
 }
 
 //--------------------------------------------------------------
@@ -216,13 +244,17 @@ void ofApp::scanSerial(){
     if (serialErr == false) {
         string count = std::to_string(portCount);
         cout << "\nI found " + count + " serial ports, which are:" << endl;
-        //        println(Serial.list());
+//        cout << serial.getDeviceList(); << endl;
 
         //        String  os=System.getProperty("os.name").toLowerCase();
         //        boolean isMacOs = os.startsWith("mac os x");
         //        boolean isWin = os.startsWith("win");
 
-        serial.setup("/dev/cu.usbmodem14201", 9600);
+        int baudRate = 9600;
+        serialArduino.setup("/dev/cu.SLAB_USBtoUART", baudRate);
+        cout << std::to_string(serialArduino.available()) << endl;
+        serial.setup("/dev/cu.usbmodem14301", baudRate);
+        cout << std::to_string(serial.available()) << endl;
         serialOnline = true;
     }
     // Can change to be the name of the port you want, e.g., COM5.
@@ -347,7 +379,7 @@ void ofApp::setupTriangles(){
     int side = ofRandom(1, 4);
 
     // TODO: control adjustment with sensors
-//    adjustment = 0;
+    adjustment = 0;
     switch (side)
     {
         case 1: // top

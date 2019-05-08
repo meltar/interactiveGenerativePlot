@@ -10,3 +10,11 @@
 
 
 #endif /* plotter_h */
+
+class Plotter {
+    
+    public:
+    Plotter();
+    ~Plotter();
+    private:
+};
