@@ -4,7 +4,6 @@
 void ofApp::setup(){
     delayTimer = ofGetElapsedTimeMillis();
 
-    ready = true;
     scanSerial();
     setupPlotter();
 
@@ -25,33 +24,7 @@ void ofApp::setup(){
 
 //--------------------------------------------------------------
 void ofApp::update(){
-    // TODO: read and store sensor values
-    if (serialArduino.available() > 0) {
-        // read the incoming bytes:
-        arduinoData = ofxGetSerialString(serialArduino, '\n');
-        if (!arduinoData.empty()) {
-            int loc = arduinoData.find(",");
-            if(loc > 0){
-                int vertical = std::stoi(arduinoData.substr(0, loc));
-                int horizontal = std::stoi(arduinoData.substr(loc + 1, arduinoData.length() - 1));
-                if (vertical < 10000){
-                    sensorVertical.push_front(vertical);
-                    if(sensorVertical.size() >= 5) {
-                        sensorVertical.pop_back();
-                    }
-                }
-                if (horizontal < 10000){
-                    sensorHorizontal.push_front(horizontal);
-                    if(sensorHorizontal.size() >= 5) {
-                        sensorHorizontal.pop_back();
-                    }
-                }
-
-//            cout << "Horizontal: " + std::to_string(sensorHorizontal.front()) << endl;
-//            cout << "Vertical: " + std::to_string(sensorVertical.front()) << endl;
-            }
-        }
-    }
+    readSensors();
 
     // wait between generation calls
     actualTime = ofGetElapsedTimeMillis();
@@ -61,23 +34,17 @@ void ofApp::update(){
     if (actualTime - delayTimer >= 2000) {
         delayTimer = ofGetElapsedTimeMillis();
 //        cout << std::to_string(tr.size()) << endl;
-        cout << "2 sec" << endl;
-
-//        ready = true;
-//        if (ready){
-//            ready = false;
-            // Iterate through triangle tree leaf nodes
-            tree<Triangle>::leaf_iterator iter=tr.begin_leaf();
-            while(iter!=tr.end()) {
+//        cout << "2 sec" << endl;
+        // Iterate through triangle tree leaf nodes
+        tree<Triangle>::leaf_iterator iter=tr.begin_leaf();
+        while(iter!=tr.end()) {
 //                old = iter;
 //                tr.append_child(old, { ofVec2f(444, 0), ofVec2f(444, 444), ofVec2f(0, 444)});
-                cout << (*iter).pointA << endl;
+            cout << (*iter).pointA << endl;
 //                iter.skip_children();
-                ++iter;
-            }
+            ++iter;
+        }
         cout << std::to_string(tr.size()) << endl;
-//            ready = true;
-//        }
     }
 }
 
@@ -88,7 +55,6 @@ void ofApp::draw(){
         lines[i].draw();
     }
 
-    ready = false;
     // draw new lines with AxiDraw
     while (!linesCurrent.empty())
     {
@@ -96,7 +62,6 @@ void ofApp::draw(){
         // TODO: send instructions to AxiDraw
         linesCurrent.pop_back();
     }
-    ready = true;
 }
 
 //--------------------------------------------------------------
@@ -345,6 +310,36 @@ void ofApp::scanSerial(){
     //            j++;
     //        }
     //    }
+}
+
+void ofApp::readSensors(){
+    // TODO: read and store sensor values
+    if (serialArduino.available() > 0) {
+        // read the incoming bytes:
+        arduinoData = ofxGetSerialString(serialArduino, '\n');
+        if (!arduinoData.empty()) {
+            int loc = arduinoData.find(",");
+            if(loc > 0){
+                int vertical = std::stoi(arduinoData.substr(0, loc));
+                int horizontal = std::stoi(arduinoData.substr(loc + 1, arduinoData.length() - 1));
+                if (vertical < 10000){
+                    sensorVertical.push_front(vertical);
+                    if(sensorVertical.size() >= 5) {
+                        sensorVertical.pop_back();
+                    }
+                }
+                if (horizontal < 10000){
+                    sensorHorizontal.push_front(horizontal);
+                    if(sensorHorizontal.size() >= 5) {
+                        sensorHorizontal.pop_back();
+                    }
+                }
+
+//                cout << "Horizontal: " + std::to_string(sensorHorizontal.front()) << endl;
+//                cout << "Vertical: " + std::to_string(sensorVertical.front()) << endl;
+            }
+        }
+    }
 }
 
 //--------------------------------------------------------------

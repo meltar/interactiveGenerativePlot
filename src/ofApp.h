@@ -34,7 +34,6 @@ public:
     string arduinoData;
     list<int> sensorVertical;
     list<int> sensorHorizontal;
-    bool ready;
     vector<ofPolyline> lines;
     vector<ofPolyline> linesCurrent;
     tree<Triangle> tr;
@@ -45,6 +44,7 @@ private:
     void raiseBrush();
     void lowerBrush();
     void scanSerial();
+    void readSensors();
     void setupPlotter();
     void motorsOff();
     Boolean serialOnline;
