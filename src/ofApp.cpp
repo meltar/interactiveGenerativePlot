@@ -2,6 +2,8 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+    delayTimer = ofGetElapsedTimeMillis();
+
     ready = true;
     scanSerial();
     setupPlotter();
@@ -24,33 +26,58 @@ void ofApp::setup(){
 //--------------------------------------------------------------
 void ofApp::update(){
     // TODO: read and store sensor values
+    if (serialArduino.available() > 0) {
+        // read the incoming bytes:
+        arduinoData = ofxGetSerialString(serialArduino, '\n');
+        if (!arduinoData.empty()) {
+            int loc = arduinoData.find(",");
+            if(loc > 0){
+                int vertical = std::stoi(arduinoData.substr(0, loc));
+                int horizontal = std::stoi(arduinoData.substr(loc + 1, arduinoData.length() - 1));
+                if (vertical < 10000){
+                    sensorVertical.push_front(vertical);
+                    if(sensorVertical.size() >= 5) {
+                        sensorVertical.pop_back();
+                    }
+                }
+                if (horizontal < 10000){
+                    sensorHorizontal.push_front(horizontal);
+                    if(sensorHorizontal.size() >= 5) {
+                        sensorHorizontal.pop_back();
+                    }
+                }
 
-    if (ready){
-        // TODO: set timer for 10 seconds?
-        // TODO: if there is nothing left to draw, generate next division
+//            cout << "Horizontal: " + std::to_string(sensorHorizontal.front()) << endl;
+//            cout << "Vertical: " + std::to_string(sensorVertical.front()) << endl;
+            }
+        }
     }
 
-    tree<Triangle> tr;
-    tree<Triangle>::iterator top, one, loc;
-    top = tr.begin();
+    // wait between generation calls
+    actualTime = ofGetElapsedTimeMillis();
 
-//    Triangle test = { ofVec2f(0, 0), ofVec2f(100, 0), ofVec2f(0, 100)};
-    tr.insert(top, { ofVec2f(0, 0), ofVec2f(100, 0), ofVec2f(0, 100)});
-    tr.insert(top, { ofVec2f(111, 0), ofVec2f(111, 111), ofVec2f(0, 111)});
-    one = tr.insert(top, { ofVec2f(222, 0), ofVec2f(222, 222), ofVec2f(0, 222)});
-    tr.append_child(one, { ofVec2f(333, 0), ofVec2f(333, 333), ofVec2f(0, 333)});
-//    cout << "Original tree" << endl;
-    tree<Triangle>::leaf_iterator iter=tr.begin_leaf();
-    while(iter!=tr.end()) {
-//        tr.append_child(iter, { ofVec2f(444, 0), ofVec2f(444, 444), ofVec2f(0, 444)});
-//        cout << (*iter).pointA << endl;
-        ++iter;
-    }
-//    cout << "Modify tree" << endl;
-    iter=tr.begin_leaf();
-    while(iter!=tr.end()) {
-//        cout << (*iter).pointA << endl;
-        ++iter;
+    // TODO: if there is nothing left to draw, generate next division
+    // Set timer to 2 sec
+    if (actualTime - delayTimer >= 2000) {
+        delayTimer = ofGetElapsedTimeMillis();
+//        cout << std::to_string(tr.size()) << endl;
+        cout << "2 sec" << endl;
+
+//        ready = true;
+//        if (ready){
+//            ready = false;
+            // Iterate through triangle tree leaf nodes
+            tree<Triangle>::leaf_iterator iter=tr.begin_leaf();
+            while(iter!=tr.end()) {
+//                old = iter;
+//                tr.append_child(old, { ofVec2f(444, 0), ofVec2f(444, 444), ofVec2f(0, 444)});
+                cout << (*iter).pointA << endl;
+//                iter.skip_children();
+                ++iter;
+            }
+        cout << std::to_string(tr.size()) << endl;
+//            ready = true;
+//        }
     }
 }
 
@@ -375,8 +402,14 @@ void ofApp::setupTriangles(){
     float x1, x2, x3 = 0;
     float y1, y2, y3 = 0;
 
+    float width = ofGetWidth();
+    float height= ofGetHeight();
+
     float adjustment = ofRandom(-450, 450);
     int side = ofRandom(1, 4);
+
+    // set up iterator to add triangles
+    top = tr.begin();
 
     // TODO: control adjustment with sensors
     adjustment = 0;
@@ -384,43 +417,59 @@ void ofApp::setupTriangles(){
     {
         case 1: // top
             x1 = 0;
-            y1 = ofGetHeight();
+            y1 = height;
 
-            x2 = ofGetWidth()/2 + adjustment;
+            x2 = width/2 + adjustment;
             y2 = 0;
 
-            x3 = ofGetWidth();
-            y3 = ofGetHeight();
+            x3 = width;
+            y3 = height;
+
+            tr.insert(top, { ofVec2f(x1, y1), ofVec2f(x2, y2), ofVec2f(x3, y3)});
+            tr.insert(top, { ofVec2f(0, 0), ofVec2f(x2, y2), ofVec2f(x1, y1)});
+            tr.insert(top, { ofVec2f(x3, y3), ofVec2f(x2, y2), ofVec2f(width, 0)});
             break;
         case 2: // left
-            x1 = ofGetWidth();
+            x1 = width;
             y1 = 0;
 
             x2 = 0;
-            y2 = ofGetHeight()/2 + adjustment;
+            y2 = height/2 + adjustment;
 
-            x3 = ofGetWidth();
-            y3 = ofGetHeight();
+            x3 = width;
+            y3 = height;
+
+            tr.insert(top, { ofVec2f(x1, y1), ofVec2f(x2, y2), ofVec2f(x3, y3)});
+            tr.insert(top, { ofVec2f(0, 0), ofVec2f(x2, y2), ofVec2f(x1, y1)});
+            tr.insert(top, { ofVec2f(x3, y3), ofVec2f(x2, y2), ofVec2f(0, height)});
             break;
         case 3: // bottom
-            x1 = ofGetWidth();
+            x1 = width;
             y1 = 0;
 
-            x2 = ofGetWidth()/2 + adjustment;
-            y2 = ofGetHeight();
+            x2 = width/2 + adjustment;
+            y2 = height;
 
             x3 = 0;
             y3 = 0;
+
+            tr.insert(top, { ofVec2f(x1, y1), ofVec2f(x2, y2), ofVec2f(x3, y3)});
+            tr.insert(top, { ofVec2f(0, 0), ofVec2f(x2, y2), ofVec2f(0, height)});
+            tr.insert(top, { ofVec2f(x1, y1), ofVec2f(x2, y2), ofVec2f(width, height)});
             break;
         default: // right
             x1 = 0;
             y1 = 0;
 
-            x2 = ofGetWidth();
-            y2 = ofGetHeight()/2 + adjustment;
+            x2 = width;
+            y2 = height/2 + adjustment;
 
             x3 = 0;
-            y3 = ofGetHeight();
+            y3 = height;
+
+            tr.insert(top, { ofVec2f(x1, y1), ofVec2f(x2, y2), ofVec2f(x3, y3)});
+            tr.insert(top, { ofVec2f(x1, y1), ofVec2f(x2, y2), ofVec2f(width, 0)});
+            tr.insert(top, { ofVec2f(x3, y3), ofVec2f(x2, y2), ofVec2f(width, height)});
             break;
     }
 
@@ -430,7 +479,40 @@ void ofApp::setupTriangles(){
     divider.addVertex(x3, y3);
     lines.push_back(divider);
     linesCurrent.push_back(divider);
+}
 
-    // TODO:
-    // add all new triangles to collection
+string ofApp::ofxGetSerialString(ofSerial &serialArduino, char until) {
+    static string str;
+    stringstream ss;
+    char ch;
+    int ttl = 1000;
+    while ((ch = serialArduino.readByte())>0 && (ttl--) > 0 && ch != until) {
+        ss << ch;
+    }
+    str += ss.str();
+    if (ch == until) {
+        string tmp = str;
+        str = "";
+        return ofxTrimString(tmp);
+    }
+    else {
+        return "";
+    }
+}
+
+// trim right trailing spaces
+string ofApp::ofxTrimStringRight(string str) {
+    size_t endpos = str.find_last_not_of(" \t\r\n");
+    return (string::npos != endpos) ? str.substr(0, endpos + 1) : str;
+}
+
+// trim left trailing spaces
+string ofApp::ofxTrimStringLeft(string str) {
+    size_t startpos = str.find_first_not_of(" \t\r\n");
+    return (string::npos != startpos) ? str.substr(startpos) : str;
+}
+
+// trim trailing spaces
+string ofApp::ofxTrimString(string str) {
+    return ofxTrimStringLeft(ofxTrimStringRight(str));;
 }

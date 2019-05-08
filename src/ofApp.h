@@ -31,10 +31,16 @@ public:
 
     ofSerial serial;
     ofSerial serialArduino;
+    string arduinoData;
+    list<int> sensorVertical;
+    list<int> sensorHorizontal;
     bool ready;
     vector<ofPolyline> lines;
     vector<ofPolyline> linesCurrent;
-//    vector<Triangle> triangles;
+    tree<Triangle> tr;
+    tree<Triangle>::iterator top, old, loc;
+
+    unsigned long actualTime, delayTimer;
 private:
     void raiseBrush();
     void lowerBrush();
@@ -44,4 +50,8 @@ private:
     Boolean serialOnline;
     Boolean brushDown;
     void setupTriangles();
+    string ofxGetSerialString(ofSerial &serialArduino, char until);
+    string ofxTrimStringRight(string str);// trim right trailing spaces
+    string ofxTrimStringLeft(string str);// trim left trailing spaces
+    string ofxTrimString(string str);// trim trailing spaces
 };
