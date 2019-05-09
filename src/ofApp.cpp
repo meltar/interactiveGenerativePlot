@@ -3,6 +3,7 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
     delayTimer = ofGetElapsedTimeMillis();
+    generateNext = false;
 
     scanSerial();
     setupPlotter();
@@ -32,32 +33,49 @@ void ofApp::update(){
     // TODO: if there is nothing left to draw, generate next division
     // Set timer to 2 sec
     if (actualTime - delayTimer >= 2000) {
+//    if (generateNext) {
+//        generateNext = false;
         delayTimer = ofGetElapsedTimeMillis();
-        cout << std::to_string(tr.size()) << endl;
-        cout << "2 sec" << endl;
+//        cout << "2 sec" << endl;
         // Iterate through triangle tree leaf nodes
         tree<Triangle>::leaf_iterator iter=tr.begin_leaf();
-        while(iter!=tr.end()) {
-//                tr.append_child(old, { ofVec2f(444, 0), ofVec2f(444, 444), ofVec2f(0, 444)});
-            cout << (*iter).pointA << endl;
-            int type = ofRandom(4);
-            switch (type){
-                case 1:
-                    divideTriangleByTwo(iter);
-                    break;
-                case 2:
-                    divideTriangleByThree(iter);
-                    break;
-                case 3:
-                    divideTriangleByFour(iter);
-                    break;
-                default:
-                    break;
+        while (tr.is_valid(iter)) {
+            if ((*iter).canGenerate && tr.depth(iter) <= 5 && iter.number_of_children() == 0){
+//                if (tr.depth(iter) <= 5) {
+//                    (*iter).canGenerate = false;
+//                }
+                vector<Triangle> results;
+                int type = ofRandom(4);
+                switch (type){
+                    case 0:
+                        results = divideTriangleByTwo(iter);
+                        break;
+                    case 1:
+                        results = divideTriangleByThree(iter);
+                        break;
+                    case 2:
+                        results = divideTriangleByFour(iter);
+                        break;
+                    case 3:
+                        break;
+                    default:
+                        break;
+                }
+
+                // use the current iterator location for appending children
+                tree<Triangle>::leaf_iterator append_iter = iter;
+
+                // advance to the next node
+                iter++;
+
+                // add new generated triangles
+                for (int i = 0; i < results.size(); i++) {
+                    tr.append_child(append_iter, results[i]);
+                }
+            } else {
+                break;
             }
-//
-            ++iter;
         }
-        cout << std::to_string(tr.size()) << endl;
     }
 }
 
@@ -88,6 +106,9 @@ void ofApp::keyPressed(int key){
             break;
         case 'd':
             lowerBrush();
+            break;
+        case 'n':
+            generateNext = true;
             break;
     }
 }
@@ -333,6 +354,7 @@ void ofApp::readSensors(){
         if (!arduinoData.empty()) {
             int loc = arduinoData.find(",");
             if(loc > 0){
+
                 int vertical = std::stoi(arduinoData.substr(0, loc));
                 int horizontal = std::stoi(arduinoData.substr(loc + 1, arduinoData.length() - 1));
                 if (vertical < 10000){
@@ -420,7 +442,6 @@ void ofApp::setupTriangles(){
     top = tr.begin();
 
     // TODO: control adjustment with sensors
-    adjustment = 0;
     switch (side)
     {
         case 1: // top
@@ -433,9 +454,9 @@ void ofApp::setupTriangles(){
             x3 = width;
             y3 = height;
 
-            tr.insert(top, { ofVec2f(x1, y1), ofVec2f(x2, y2), ofVec2f(x3, y3)});
-            tr.insert(top, { ofVec2f(0, 0), ofVec2f(x2, y2), ofVec2f(x1, y1)});
-            tr.insert(top, { ofVec2f(x3, y3), ofVec2f(x2, y2), ofVec2f(width, 0)});
+            tr.insert(top, { ofVec2f(x1, y1), ofVec2f(x2, y2), ofVec2f(x3, y3), true });
+            tr.insert(top, { ofVec2f(0, 0), ofVec2f(x2, y2), ofVec2f(x1, y1), true });
+            tr.insert(top, { ofVec2f(x3, y3), ofVec2f(x2, y2), ofVec2f(width, 0), true });
             break;
         case 2: // left
             x1 = width;
@@ -447,9 +468,9 @@ void ofApp::setupTriangles(){
             x3 = width;
             y3 = height;
 
-            tr.insert(top, { ofVec2f(x1, y1), ofVec2f(x2, y2), ofVec2f(x3, y3)});
-            tr.insert(top, { ofVec2f(0, 0), ofVec2f(x2, y2), ofVec2f(x1, y1)});
-            tr.insert(top, { ofVec2f(x3, y3), ofVec2f(x2, y2), ofVec2f(0, height)});
+            tr.insert(top, { ofVec2f(x1, y1), ofVec2f(x2, y2), ofVec2f(x3, y3), true });
+            tr.insert(top, { ofVec2f(0, 0), ofVec2f(x2, y2), ofVec2f(x1, y1), true });
+            tr.insert(top, { ofVec2f(x3, y3), ofVec2f(x2, y2), ofVec2f(0, height), true });
             break;
         case 3: // bottom
             x1 = width;
@@ -461,9 +482,9 @@ void ofApp::setupTriangles(){
             x3 = 0;
             y3 = 0;
 
-            tr.insert(top, { ofVec2f(x1, y1), ofVec2f(x2, y2), ofVec2f(x3, y3)});
-            tr.insert(top, { ofVec2f(0, 0), ofVec2f(x2, y2), ofVec2f(0, height)});
-            tr.insert(top, { ofVec2f(x1, y1), ofVec2f(x2, y2), ofVec2f(width, height)});
+            tr.insert(top, { ofVec2f(x1, y1), ofVec2f(x2, y2), ofVec2f(x3, y3), true });
+            tr.insert(top, { ofVec2f(0, 0), ofVec2f(x2, y2), ofVec2f(0, height), true });
+            tr.insert(top, { ofVec2f(x1, y1), ofVec2f(x2, y2), ofVec2f(width, height), true });
             break;
         default: // right
             x1 = 0;
@@ -475,9 +496,9 @@ void ofApp::setupTriangles(){
             x3 = 0;
             y3 = height;
 
-            tr.insert(top, { ofVec2f(x1, y1), ofVec2f(x2, y2), ofVec2f(x3, y3)});
-            tr.insert(top, { ofVec2f(x1, y1), ofVec2f(x2, y2), ofVec2f(width, 0)});
-            tr.insert(top, { ofVec2f(x3, y3), ofVec2f(x2, y2), ofVec2f(width, height)});
+            tr.insert(top, { ofVec2f(x1, y1), ofVec2f(x2, y2), ofVec2f(x3, y3), true });
+            tr.insert(top, { ofVec2f(x1, y1), ofVec2f(x2, y2), ofVec2f(width, 0), true });
+            tr.insert(top, { ofVec2f(x3, y3), ofVec2f(x2, y2), ofVec2f(width, height), true });
             break;
     }
 
@@ -489,44 +510,59 @@ void ofApp::setupTriangles(){
     linesCurrent.push_back(divider);
 }
 
-void ofApp::divideTriangleByTwo(tree<Triangle>::iterator pos) {
-    // DONE 1) choose a vertex
-    // 1a) Random vertex?
-    // DONE 2) make a line from the vertex to the middle of the opposite side
-    // DONE 3) Save new polyline (2 points)
-    // DONE 4) Find t in tree
-    // DONE 5) Save 2 new triangles as children
+vector<Triangle> ofApp::divideTriangleByTwo(tree<Triangle>::iterator pos) {
+    vector<Triangle> newTriangles;
 
-    ofVec2f newPointA = (*pos).pointA;
-    float newPointX = ((*pos).pointB.x + (*pos).pointC.x)/2;
-    float newPointY = ((*pos).pointB.y + (*pos).pointC.y)/2;
-//    tr.append_child(pos, { newPointA, newPointB, (*pos).pointC });
-//    tr.append_child(pos, { newPointA, newPointB, (*pos).pointB });
+    ofVec2f newPointA;
+    ofVec2f newPointB;
+    ofVec2f newPointC;
+
+    switch ((int)ofRandom(3)) {
+        case 0:
+            newPointA = (*pos).pointA;
+            newPointB = (*pos).pointB;
+            newPointC = (*pos).pointC;
+            break;
+        case 1:
+            newPointA = (*pos).pointB;
+            newPointB = (*pos).pointC;
+            newPointC = (*pos).pointA;
+            break;
+        case 2:
+            newPointA = (*pos).pointC;
+            newPointB = (*pos).pointA;
+            newPointC = (*pos).pointB;
+            break;
+    }
+
+    float newPointX = (newPointB.x + newPointC.x)/2;
+    float newPointY = (newPointB.y + newPointC.y)/2;
+
+    newTriangles.push_back({ newPointA, ofVec2f(newPointX, newPointY), newPointC, true });
+    newTriangles.push_back({ newPointA, ofVec2f(newPointX, newPointY), newPointB, true });
 
     ofPolyline divider;
     divider.addVertex(newPointA.x, newPointA.y);
     divider.addVertex(newPointX, newPointY);
     lines.push_back(divider);
     linesCurrent.push_back(divider);
+
+    return newTriangles;
 }
 
-void ofApp::divideTriangleByThree(tree<Triangle>::iterator pos) {
-    // DONE 1) find center (ish) of triangle
-    // DONE 2) make a line from each vertex to the center of the triangle
-    // DONE 3) Save new polylines (3 points, 2 points)
-    // DONE 4) Find t in tree
-    // DONE 5) Save 3 new triangles as children
+vector<Triangle> ofApp::divideTriangleByThree(tree<Triangle>::iterator pos) {
+    vector<Triangle> newTriangles;
 
     ofVec2f newPointA = (*pos).pointA;
     ofVec2f newPointB = (*pos).pointB;
     ofVec2f newPointC = (*pos).pointC;
 
-    float newPointX = ((*pos).pointA.x + (*pos).pointB.x + (*pos).pointC.x)/3;
-    float newPointY = ((*pos).pointA.y + (*pos).pointB.y + (*pos).pointC.y)/3;
+    float newPointX = (newPointA.x + newPointB.x + newPointC.x)/3;
+    float newPointY = (newPointA.y + newPointB.y + newPointC.y)/3;
 
-//    tr.append_child(pos, { newPoint, (*pos).pointA, (*pos).pointB });
-//    tr.append_child(pos, { newPoint, (*pos).pointA, (*pos).pointC });
-//    tr.append_child(pos, { newPoint, (*pos).pointB, (*pos).pointC });
+    newTriangles.push_back({ ofVec2f(newPointX, newPointY), newPointA, newPointB, true });
+    newTriangles.push_back({ ofVec2f(newPointX, newPointY), newPointA, newPointC, true });
+    newTriangles.push_back({ ofVec2f(newPointX, newPointY), newPointB, newPointC, true });
 
     // First new line (3 points including center)
     ofPolyline divider;
@@ -543,36 +579,40 @@ void ofApp::divideTriangleByThree(tree<Triangle>::iterator pos) {
 
     lines.push_back(divider);
     linesCurrent.push_back(divider);
+
+    return newTriangles;
 }
 
-void ofApp::divideTriangleByFour(tree<Triangle>::iterator pos) {
-    // DONE 1) Find the point in the middle of each line (3 points)
-    // DONE 2) Make a line between each new point (3 lines)
-    // DONE 3) Save new polyline (3 points)
-    // DONE? 4) Find t in tree
-    // DONE? 5) Save 4 new triangles as children
+vector<Triangle> ofApp::divideTriangleByFour(tree<Triangle>::iterator pos) {
+    vector<Triangle> newTriangles;
+    ofVec2f newPointA = (*pos).pointA;
+    ofVec2f newPointB = (*pos).pointB;
+    ofVec2f newPointC = (*pos).pointC;
 
-    float newPointAX = ((*pos).pointA.x + (*pos).pointB.x)/2;
-    float newPointAY = ((*pos).pointA.y + (*pos).pointB.y)/2;
-//    tr.append_child(pos, { ofVec2f(newPointAX, newPointAY, (*pos).pointA, (*pos).pointC });
+    float midpointABX = (newPointA.x + newPointB.x)/2;
+    float midpointABY = (newPointA.y + newPointB.y)/2;
 
-    float newPointBX = ((*pos).pointB.x + (*pos).pointC.x)/2;
-    float newPointBY = ((*pos).pointB.y + (*pos).pointC.y)/2;
-//    tr.append_child(pos, { ofVec2f(newPointBX, newPointBY, (*pos).pointB, newPointA });
+    float midpointBCX = (newPointB.x + newPointC.x)/2;
+    float midpointBCY = (newPointB.y + newPointC.y)/2;
 
-    float newPointCX = ((*pos).pointC.x + (*pos).pointA.x)/2;
-    float newPointCY = ((*pos).pointC.y + (*pos).pointA.y)/2;
-//    tr.append_child(pos, { ofVec2f(newPointCX, newPointCY, (*pos).pointC, newPointB });
+    float midpointCAX = (newPointC.x + newPointA.x)/2;
+    float midpointCAY = (newPointC.y + newPointA.y)/2;
 
-//    tr.append_child(pos, { ofVec2f(newPointAX, newPointAY, ofVec2f(newPointBX, newPointBY, ofVec2f(newPointCX, newPointCY });
+    newTriangles.push_back({ ofVec2f(midpointABX, midpointABY), ofVec2f(midpointBCX, midpointBCY), newPointB, true });
+    newTriangles.push_back({ ofVec2f(midpointBCX, midpointBCY), ofVec2f(midpointCAX, midpointCAY), newPointC, true });
+    newTriangles.push_back({ ofVec2f(midpointCAX, midpointCAY), ofVec2f(midpointABX, midpointABY), newPointA, true });
+
+    newTriangles.push_back({ ofVec2f(midpointABX, midpointABY), ofVec2f(midpointBCX, midpointBCY), ofVec2f(midpointCAX, midpointCAY), true });
 
     ofPolyline divider;
-    divider.addVertex(newPointAX, newPointAY);
-    divider.addVertex(newPointBX, newPointBY);
-    divider.addVertex(newPointCX, newPointCY);
-    divider.addVertex(newPointAX, newPointAY);
+    divider.addVertex(midpointABX, midpointABY);
+    divider.addVertex(midpointBCX, midpointBCY);
+    divider.addVertex(midpointCAX, midpointCAY);
+    divider.addVertex(midpointABX, midpointABY);
     lines.push_back(divider);
     linesCurrent.push_back(divider);
+
+    return newTriangles;
 }
 
 string ofApp::ofxGetSerialString(ofSerial &serialArduino, char until) {

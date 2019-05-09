@@ -9,7 +9,7 @@ struct Triangle {
     ofVec2f pointA;
     ofVec2f pointB;
     ofVec2f pointC;
-    
+    Boolean canGenerate;
 };
 class ofApp : public ofBaseApp{
 public:
@@ -49,10 +49,11 @@ private:
     void motorsOff();
     Boolean serialOnline;
     Boolean brushDown;
+    Boolean generateNext;
     void setupTriangles();
-    void divideTriangleByTwo(tree<Triangle>::iterator pos);
-    void divideTriangleByThree(tree<Triangle>::iterator pos);
-    void divideTriangleByFour(tree<Triangle>::iterator pos);
+    vector<Triangle> divideTriangleByTwo(tree<Triangle>::iterator pos);
+    vector<Triangle> divideTriangleByThree(tree<Triangle>::iterator pos);
+    vector<Triangle> divideTriangleByFour(tree<Triangle>::iterator pos);
     string ofxGetSerialString(ofSerial &serialArduino, char until);
     string ofxTrimStringRight(string str);// trim right trailing spaces
     string ofxTrimStringLeft(string str);// trim left trailing spaces
