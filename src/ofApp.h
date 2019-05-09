@@ -2,6 +2,7 @@
 
 #include "ofMain.h"
 #include "tree.hh"
+#include "plotter.h"
 
 #define _USE_AXIDRAW_
 
@@ -29,7 +30,8 @@ public:
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
 
-    ofSerial serial;
+//    ofSerial serial;
+    Plotter plotter;
     ofSerial serialArduino;
     string arduinoData;
     list<int> sensorVertical;
@@ -41,14 +43,14 @@ public:
 
     unsigned long actualTime, delayTimer;
 private:
-    void raiseBrush();
-    void lowerBrush();
+//    void raiseBrush();
+//    void lowerBrush();
     void scanSerial();
     void readSensors();
-    void setupPlotter();
-    void motorsOff();
+//    void setupPlotter();
+//    void motorsOff();
     Boolean serialOnline;
-    Boolean brushDown;
+//    Boolean brushDown;
     Boolean generateNext;
     void setupTriangles();
     vector<Triangle> divideTriangleByTwo(tree<Triangle>::iterator pos);

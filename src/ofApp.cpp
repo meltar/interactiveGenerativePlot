@@ -6,7 +6,8 @@ void ofApp::setup(){
     generateNext = false;
 
     scanSerial();
-    setupPlotter();
+    plotter = Plotter();
+//    setupPlotter();
 
     ofBackground(0);
     ofColor(255);
@@ -99,13 +100,13 @@ void ofApp::draw(){
 void ofApp::keyPressed(int key){
     switch (key){
         case ' ':
-            motorsOff();
+            plotter.motorsOff();
             break;
         case 'u':
-            raiseBrush();
+            plotter.raiseBrush();
             break;
         case 'd':
-            lowerBrush();
+            plotter.lowerBrush();
             break;
         case 'n':
             generateNext = true;
@@ -163,86 +164,86 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
 
 }
 
-//--------------------------------------------------------------
-void ofApp::raiseBrush(){
-    //    int waitTime = NextMoveTime - millis();
-    //    if (waitTime > 0)
-    //    {
-    //        raiseBrushStatus = 1; // Flag to raise brush when no longer busy.
-    //    } else
-    //    {
-    //        if (BrushDown == true) {
-    //            if (SerialOnline) {
-    //                myPort.write("SP,0," + str(delayAfterRaisingBrush) + "\r");
-    //                BrushDown = false;
-    //                NextMoveTime = millis() + delayAfterRaisingBrush;
-    //            }
-    //            //      if (debugMode) println("Raise Brush.");
-    //        }
-    //        raiseBrushStatus = -1; // Clear flag.
-    //    }
-    if (brushDown == true) {
-        if (serialOnline) {
-            string message = "SP,0," + std::to_string(10) + "\r";
-            int length = message.length();
-            char char_array[length + 1];
-            strcpy(char_array, message.c_str());
-
-            serial.writeBytes(char_array, 9);
-            brushDown = false;
-            cout << "Raise Brush." << endl;
-        }
-    }
-}
-
-//--------------------------------------------------------------
-void ofApp::lowerBrush(){
-    //    int waitTime = NextMoveTime - millis();
-    //    if (waitTime > 0)
-    //    {
-    //        lowerBrushStatus = 1;  // Flag to lower brush when no longer busy.
-    //        // delay (waitTime);  // Wait for prior move to finish:
-    //    } else
-    //    {
-    //        if  (BrushDown == false)
-    //        {
-    //            if (SerialOnline) {
-    //                myPort.write("SP,1," + str(delayAfterLoweringBrush) + "\r");
-    //
-    //                BrushDown = true;
-    //                NextMoveTime = millis() + delayAfterLoweringBrush;
-    //                //lastPosition = new PVector(-1,-1);
-    //            }
-    //            //      if (debugMode) println("Lower Brush.");
-    //        }
-    //        lowerBrushStatus = -1; // Clear flag.
-    //    }
-    if (brushDown == false) {
-        if (serialOnline) {
-            string message = "SP,1," + std::to_string(10) + "\r";
-            int length = message.length();
-            char char_array[length + 1];
-            strcpy(char_array, message.c_str());
-
-            serial.writeBytes(char_array, length + 1);
-            brushDown = true;
-            cout << "Lower Brush." << endl;
-        }
-    }
-}
-
-//--------------------------------------------------------------
-void ofApp::motorsOff(){
-    if (serialOnline) {
-        string message = "EM,0,0\r";
-        int length = message.length();
-        char char_array[length + 1];
-        strcpy(char_array, message.c_str());
-
-        serial.writeBytes(char_array, length + 1);
-        cout << "Motors off." << endl;
-    }
-}
+////--------------------------------------------------------------
+//void ofApp::raiseBrush(){
+//    //    int waitTime = NextMoveTime - millis();
+//    //    if (waitTime > 0)
+//    //    {
+//    //        raiseBrushStatus = 1; // Flag to raise brush when no longer busy.
+//    //    } else
+//    //    {
+//    //        if (BrushDown == true) {
+//    //            if (SerialOnline) {
+//    //                myPort.write("SP,0," + str(delayAfterRaisingBrush) + "\r");
+//    //                BrushDown = false;
+//    //                NextMoveTime = millis() + delayAfterRaisingBrush;
+//    //            }
+//    //            //      if (debugMode) println("Raise Brush.");
+//    //        }
+//    //        raiseBrushStatus = -1; // Clear flag.
+//    //    }
+//    if (brushDown == true) {
+//        if (serialOnline) {
+//            string message = "SP,0," + std::to_string(10) + "\r";
+//            int length = message.length();
+//            char char_array[length + 1];
+//            strcpy(char_array, message.c_str());
+//
+//            serial.writeBytes(char_array, 9);
+//            brushDown = false;
+//            cout << "Raise Brush." << endl;
+//        }
+//    }
+//}
+//
+////--------------------------------------------------------------
+//void ofApp::lowerBrush(){
+//    //    int waitTime = NextMoveTime - millis();
+//    //    if (waitTime > 0)
+//    //    {
+//    //        lowerBrushStatus = 1;  // Flag to lower brush when no longer busy.
+//    //        // delay (waitTime);  // Wait for prior move to finish:
+//    //    } else
+//    //    {
+//    //        if  (BrushDown == false)
+//    //        {
+//    //            if (SerialOnline) {
+//    //                myPort.write("SP,1," + str(delayAfterLoweringBrush) + "\r");
+//    //
+//    //                BrushDown = true;
+//    //                NextMoveTime = millis() + delayAfterLoweringBrush;
+//    //                //lastPosition = new PVector(-1,-1);
+//    //            }
+//    //            //      if (debugMode) println("Lower Brush.");
+//    //        }
+//    //        lowerBrushStatus = -1; // Clear flag.
+//    //    }
+//    if (brushDown == false) {
+//        if (serialOnline) {
+//            string message = "SP,1," + std::to_string(10) + "\r";
+//            int length = message.length();
+//            char char_array[length + 1];
+//            strcpy(char_array, message.c_str());
+//
+//            serial.writeBytes(char_array, length + 1);
+//            brushDown = true;
+//            cout << "Lower Brush." << endl;
+//        }
+//    }
+//}
+//
+////--------------------------------------------------------------
+//void ofApp::motorsOff(){
+//    if (serialOnline) {
+//        string message = "EM,0,0\r";
+//        int length = message.length();
+//        char char_array[length + 1];
+//        strcpy(char_array, message.c_str());
+//
+//        serial.writeBytes(char_array, length + 1);
+//        cout << "Motors off." << endl;
+//    }
+//}
 
 //--------------------------------------------------------------
 void ofApp::scanSerial(){
@@ -255,11 +256,11 @@ void ofApp::scanSerial(){
     //    OpenPortList = new int[0];
     vector <ofSerialDeviceInfo> deviceList;
 
-    serialOnline = false;
+//    serialOnline = false;
     Boolean serialErr = false;
 
     try {
-        deviceList = serial.getDeviceList();
+        deviceList = serialArduino.getDeviceList();
         portCount = deviceList.size();
     }
     catch (exception e) {
@@ -279,8 +280,8 @@ void ofApp::scanSerial(){
         int baudRate = 9600;
         serialArduino.setup("/dev/cu.SLAB_USBtoUART", baudRate);
         cout << std::to_string(serialArduino.available()) << endl;
-        serial.setup("/dev/cu.usbmodem14301", baudRate);
-        cout << std::to_string(serial.available()) << endl;
+//        serial.setup("/dev/cu.usbmodem14301", baudRate);
+//        cout << std::to_string(serial.available()) << endl;
         serialOnline = true;
     }
     // Can change to be the name of the port you want, e.g., COM5.
@@ -377,55 +378,55 @@ void ofApp::readSensors(){
     }
 }
 
-//--------------------------------------------------------------
-void ofApp::setupPlotter() {
-    if (serialOnline) {
-        cout << "CONNECTED" << endl;
-        string message = "EM,1,1\r";
-        int length = message.length();
-        char char_array[length + 1];
-        strcpy(char_array, message.c_str());
-        //Configure both steppers in 1/16 step mode
-        serial.writeBytes(char_array, length + 1);
-
-        // Configure brush lift servo endpoints and speed
-        float servoPaint = 7500 + 175 * 30;
-        message = "SC,4," + std::to_string(servoPaint) + "\r";
-        length = message.length();
-        char_array[length + 1];
-        strcpy(char_array, message.c_str());
-        // Brush DOWN position, for painting
-        serial.writeBytes(char_array, length + 1);
-
-        float servoUp = 7500 + 175 * 70;
-        message = "SC,5," + std::to_string(servoUp) + "\r";
-        length = message.length();
-        char_array[length + 1];
-        strcpy(char_array, message.c_str());
-        // Brush UP position
-        serial.writeBytes(char_array, length + 1);
-
-        message = "SC,10,65535\r";
-        length = message.length();
-        char_array[length + 1];
-        strcpy(char_array, message.c_str());
-        // Set brush raising and lowering speed.
-        serial.writeBytes(char_array, length + 1);
-
-        // Ensure that we actually raise the brush:
-        brushDown = true;
-        raiseBrush();
-        sleep(2);
-        lowerBrush();
-        sleep(2);
-        motorsOff();
-        sleep(2);
-
-        cout << "SUCCESS" << endl;
-    } else {
-        cout << "ERROR DURING SETUP" << endl;
-    }
-}
+////--------------------------------------------------------------
+//void ofApp::setupPlotter() {
+//    if (serialOnline) {
+//        cout << "CONNECTED" << endl;
+//        string message = "EM,1,1\r";
+//        int length = message.length();
+//        char char_array[length + 1];
+//        strcpy(char_array, message.c_str());
+//        //Configure both steppers in 1/16 step mode
+//        serial.writeBytes(char_array, length + 1);
+//
+//        // Configure brush lift servo endpoints and speed
+//        float servoPaint = 7500 + 175 * 30;
+//        message = "SC,4," + std::to_string(servoPaint) + "\r";
+//        length = message.length();
+//        char_array[length + 1];
+//        strcpy(char_array, message.c_str());
+//        // Brush DOWN position, for painting
+//        serial.writeBytes(char_array, length + 1);
+//
+//        float servoUp = 7500 + 175 * 70;
+//        message = "SC,5," + std::to_string(servoUp) + "\r";
+//        length = message.length();
+//        char_array[length + 1];
+//        strcpy(char_array, message.c_str());
+//        // Brush UP position
+//        serial.writeBytes(char_array, length + 1);
+//
+//        message = "SC,10,65535\r";
+//        length = message.length();
+//        char_array[length + 1];
+//        strcpy(char_array, message.c_str());
+//        // Set brush raising and lowering speed.
+//        serial.writeBytes(char_array, length + 1);
+//
+//        // Ensure that we actually raise the brush:
+//        brushDown = true;
+//        raiseBrush();
+//        sleep(2);
+//        lowerBrush();
+//        sleep(2);
+//        motorsOff();
+//        sleep(2);
+//
+//        cout << "SUCCESS" << endl;
+//    } else {
+//        cout << "ERROR DURING SETUP" << endl;
+//    }
+//}
 
 //--------------------------------------------------------------
 void ofApp::setupTriangles(){
