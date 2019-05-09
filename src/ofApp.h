@@ -50,6 +50,9 @@ private:
     Boolean serialOnline;
     Boolean brushDown;
     void setupTriangles();
+    void divideTriangleByTwo(tree<Triangle>::iterator pos);
+    void divideTriangleByThree(tree<Triangle>::iterator pos);
+    void divideTriangleByFour(tree<Triangle>::iterator pos);
     string ofxGetSerialString(ofSerial &serialArduino, char until);
     string ofxTrimStringRight(string str);// trim right trailing spaces
     string ofxTrimStringLeft(string str);// trim left trailing spaces

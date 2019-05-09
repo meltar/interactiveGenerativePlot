@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4B69E1D0A3A1BDC003C02F2 /* main.cpp */; };
 		E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */; };
-		E50E1F932281F3CA0049B62A /* triangle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E50E1F922281F3CA0049B62A /* triangle.cpp */; };
 		E50E1F96228241F90049B62A /* plotter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E50E1F94228241F90049B62A /* plotter.cpp */; };
 /* End PBXBuildFile section */
 
@@ -207,8 +206,6 @@
 		E4B69E1F0A3A1BDC003C02F2 /* ofApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ofApp.h; path = src/ofApp.h; sourceTree = SOURCE_ROOT; };
 		E4B6FCAD0C3E899E008CF71C /* openFrameworks-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "openFrameworks-Info.plist"; sourceTree = "<group>"; };
 		E4EB6923138AFD0F00A09F29 /* Project.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Project.xcconfig; sourceTree = "<group>"; };
-		E50E1F912281F3AD0049B62A /* triangle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = triangle.h; sourceTree = "<group>"; };
-		E50E1F922281F3CA0049B62A /* triangle.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = triangle.cpp; sourceTree = "<group>"; };
 		E50E1F94228241F90049B62A /* plotter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = plotter.cpp; sourceTree = "<group>"; };
 		E50E1F97228242D70049B62A /* plotter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = plotter.h; sourceTree = "<group>"; };
 		E50E1F982282916F0049B62A /* tree.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = tree.hh; path = ../../../../../../Downloads/tree.hh; sourceTree = "<group>"; };
@@ -540,9 +537,7 @@
 			isa = PBXGroup;
 			children = (
 				E4B69E1D0A3A1BDC003C02F2 /* main.cpp */,
-				E50E1F912281F3AD0049B62A /* triangle.h */,
 				E50E1F97228242D70049B62A /* plotter.h */,
-				E50E1F922281F3CA0049B62A /* triangle.cpp */,
 				E50E1F982282916F0049B62A /* tree.hh */,
 				E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */,
 				E4B69E1F0A3A1BDC003C02F2 /* ofApp.h */,
@@ -650,7 +645,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */,
-				E50E1F932281F3CA0049B62A /* triangle.cpp in Sources */,
 				E50E1F96228241F90049B62A /* plotter.cpp in Sources */,
 				E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */,
 			);

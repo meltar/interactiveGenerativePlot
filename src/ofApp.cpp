@@ -33,15 +33,28 @@ void ofApp::update(){
     // Set timer to 2 sec
     if (actualTime - delayTimer >= 2000) {
         delayTimer = ofGetElapsedTimeMillis();
-//        cout << std::to_string(tr.size()) << endl;
-//        cout << "2 sec" << endl;
+        cout << std::to_string(tr.size()) << endl;
+        cout << "2 sec" << endl;
         // Iterate through triangle tree leaf nodes
         tree<Triangle>::leaf_iterator iter=tr.begin_leaf();
         while(iter!=tr.end()) {
-//                old = iter;
 //                tr.append_child(old, { ofVec2f(444, 0), ofVec2f(444, 444), ofVec2f(0, 444)});
             cout << (*iter).pointA << endl;
-//                iter.skip_children();
+            int type = ofRandom(4);
+            switch (type){
+                case 1:
+                    divideTriangleByTwo(iter);
+                    break;
+                case 2:
+                    divideTriangleByThree(iter);
+                    break;
+                case 3:
+                    divideTriangleByFour(iter);
+                    break;
+                default:
+                    break;
+            }
+//
             ++iter;
         }
         cout << std::to_string(tr.size()) << endl;
@@ -472,6 +485,92 @@ void ofApp::setupTriangles(){
     divider.addVertex(x1, y1);
     divider.addVertex(x2, y2);
     divider.addVertex(x3, y3);
+    lines.push_back(divider);
+    linesCurrent.push_back(divider);
+}
+
+void ofApp::divideTriangleByTwo(tree<Triangle>::iterator pos) {
+    // DONE 1) choose a vertex
+    // 1a) Random vertex?
+    // DONE 2) make a line from the vertex to the middle of the opposite side
+    // DONE 3) Save new polyline (2 points)
+    // DONE 4) Find t in tree
+    // DONE 5) Save 2 new triangles as children
+
+    ofVec2f newPointA = (*pos).pointA;
+    float newPointX = ((*pos).pointB.x + (*pos).pointC.x)/2;
+    float newPointY = ((*pos).pointB.y + (*pos).pointC.y)/2;
+//    tr.append_child(pos, { newPointA, newPointB, (*pos).pointC });
+//    tr.append_child(pos, { newPointA, newPointB, (*pos).pointB });
+
+    ofPolyline divider;
+    divider.addVertex(newPointA.x, newPointA.y);
+    divider.addVertex(newPointX, newPointY);
+    lines.push_back(divider);
+    linesCurrent.push_back(divider);
+}
+
+void ofApp::divideTriangleByThree(tree<Triangle>::iterator pos) {
+    // DONE 1) find center (ish) of triangle
+    // DONE 2) make a line from each vertex to the center of the triangle
+    // DONE 3) Save new polylines (3 points, 2 points)
+    // DONE 4) Find t in tree
+    // DONE 5) Save 3 new triangles as children
+
+    ofVec2f newPointA = (*pos).pointA;
+    ofVec2f newPointB = (*pos).pointB;
+    ofVec2f newPointC = (*pos).pointC;
+
+    float newPointX = ((*pos).pointA.x + (*pos).pointB.x + (*pos).pointC.x)/3;
+    float newPointY = ((*pos).pointA.y + (*pos).pointB.y + (*pos).pointC.y)/3;
+
+//    tr.append_child(pos, { newPoint, (*pos).pointA, (*pos).pointB });
+//    tr.append_child(pos, { newPoint, (*pos).pointA, (*pos).pointC });
+//    tr.append_child(pos, { newPoint, (*pos).pointB, (*pos).pointC });
+
+    // First new line (3 points including center)
+    ofPolyline divider;
+    divider.addVertex(newPointA.x, newPointA.y);
+    divider.addVertex(newPointX, newPointY);
+    divider.addVertex(newPointB.x, newPointB.y);
+
+    lines.push_back(divider);
+    linesCurrent.push_back(divider);
+
+    // Second new line (2 points including center)
+    divider.addVertex(newPointX, newPointY);
+    divider.addVertex(newPointC.x, newPointC.y);
+
+    lines.push_back(divider);
+    linesCurrent.push_back(divider);
+}
+
+void ofApp::divideTriangleByFour(tree<Triangle>::iterator pos) {
+    // DONE 1) Find the point in the middle of each line (3 points)
+    // DONE 2) Make a line between each new point (3 lines)
+    // DONE 3) Save new polyline (3 points)
+    // DONE? 4) Find t in tree
+    // DONE? 5) Save 4 new triangles as children
+
+    float newPointAX = ((*pos).pointA.x + (*pos).pointB.x)/2;
+    float newPointAY = ((*pos).pointA.y + (*pos).pointB.y)/2;
+//    tr.append_child(pos, { ofVec2f(newPointAX, newPointAY, (*pos).pointA, (*pos).pointC });
+
+    float newPointBX = ((*pos).pointB.x + (*pos).pointC.x)/2;
+    float newPointBY = ((*pos).pointB.y + (*pos).pointC.y)/2;
+//    tr.append_child(pos, { ofVec2f(newPointBX, newPointBY, (*pos).pointB, newPointA });
+
+    float newPointCX = ((*pos).pointC.x + (*pos).pointA.x)/2;
+    float newPointCY = ((*pos).pointC.y + (*pos).pointA.y)/2;
+//    tr.append_child(pos, { ofVec2f(newPointCX, newPointCY, (*pos).pointC, newPointB });
+
+//    tr.append_child(pos, { ofVec2f(newPointAX, newPointAY, ofVec2f(newPointBX, newPointBY, ofVec2f(newPointCX, newPointCY });
+
+    ofPolyline divider;
+    divider.addVertex(newPointAX, newPointAY);
+    divider.addVertex(newPointBX, newPointBY);
+    divider.addVertex(newPointCX, newPointCY);
+    divider.addVertex(newPointAX, newPointAY);
     lines.push_back(divider);
     linesCurrent.push_back(divider);
 }
