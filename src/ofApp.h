@@ -30,7 +30,6 @@ public:
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
 
-//    ofSerial serial;
     Plotter plotter;
     ofSerial serialArduino;
     string arduinoData;
@@ -43,14 +42,10 @@ public:
 
     unsigned long actualTime, delayTimer;
 private:
-//    void raiseBrush();
-//    void lowerBrush();
+
     void scanSerial();
     void readSensors();
-//    void setupPlotter();
-//    void motorsOff();
     Boolean serialOnline;
-//    Boolean brushDown;
     Boolean generateNext;
     void setupTriangles();
     vector<Triangle> divideTriangleByTwo(tree<Triangle>::iterator pos);

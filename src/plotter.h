@@ -15,27 +15,33 @@
 
 class Plotter {
 
-    float MotorSpeed;
-    int ServoUpPct;
-    int ServoPaintPct;
+    float motorSpeed;
+    int servoUpPct;
+    int servoPaintPct;
     Boolean reverseMotorX;
     Boolean reverseMotorY;
     int delayAfterRaisingBrush;
     int delayAfterLoweringBrush;
     Boolean debugMode;
-    Boolean PaperSizeA4;
+    Boolean paperSizeA4;
     Boolean segmentQueued = false;
 //    PVector queuePt1 = new PVector(-1, -1);
 //    PVector queuePt2 = new PVector(-1, -1);
-    float MotorStepsPerPixel;
-    float PixelsPerInch;
+    float motorStepsPerPixel;
+    float pixelsPerInch;
+
+    int mousePaperLeft;
+    int mousePaperRight;
+    int mousePaperTop;
+    int mousePaperBottom;
+
     int yBrushRestPositionPixels = 6;
-    int ServoUp;
-    int ServoPaint;
-    int MotorMinX;
-    int MotorMinY;
-    int MotorMaxX;
-    int MotorMaxY;
+    int servoUp;
+    int servoPaint;
+    int motorMinX;
+    int motorMinY;
+    int motorMaxX;
+    int motorMaxY;
 //    ofColor black;
 //    ofColor PenColor;
     Boolean firstPath;
@@ -44,14 +50,14 @@ class Plotter {
     ofSerial serial;
     int val;
     Boolean brushDown;
-    Boolean BrushDownAtPause;
-    Boolean DrawingPath;
+    Boolean brushDownAtPause;
+    Boolean drawingPath;
     int xLocAtPause;
     int yLocAtPause;
-    int MotorX;
-    int MotorY;
-    int MotorLocatorX;
-    int MotorLocatorY;
+    int motorX;
+    int motorY;
+    int motorLocatorX;
+    int motorLocatorY;
 //    PVector lastPosition;
     Boolean forceRedraw;
     Boolean shiftKeyDown;
@@ -65,16 +71,16 @@ class Plotter {
     Boolean lastBrushDown_DrawingPath;
     int lastX_DrawingPath;
     int lastY_DrawingPath;
-    int NextMoveTime;
-    int SubsequentWaitTime;
+    int nextMoveTime;
+    int subsequentWaitTime;
     int UIMessageExpire;
     int raiseBrushStatus;
     int lowerBrushStatus;
     int moveStatus;
-    int MoveDestX;
-    int MoveDestY;
-    int PaintDest;
-    Boolean Paused;
+    int moveDestX;
+    int moveDestY;
+    int paintDest;
+    Boolean paused;
 //    PVector[] ToDoList;  // Queue future events in an array; Coordinate/command
     int indexDone;
     int indexDrawn;
@@ -87,5 +93,10 @@ class Plotter {
     void raiseBrush();
     void lowerBrush();
     void motorsOff();
+    void moveRelativeXY(int xD, int yD);
+    void moveToXY(int xLoc, int yLoc);
+    void moveToXY();
+    ofVec2f getMotorPixelPos();
+    float getDistance(int x1, int y1, int x2, int y2);
     private:
 };

@@ -7,13 +7,13 @@
 
 #include "plotter.h"
 
-Plotter::Plotter(){
+Plotter::Plotter() {
     serialOnline = false;
     // User Settings:
-    MotorSpeed = 4000.0;  // Steps per second, 1500 default
+    motorSpeed = 4000.0;  // Steps per second, 1500 default
 
-    ServoUpPct = 70;    // Brush UP position, %  (higher number lifts higher).
-    ServoPaintPct = 30;    // Brush DOWN position, %  (higher number lifts higher).
+    servoUpPct = 70;    // Brush UP position, %  (higher number lifts higher).
+    servoPaintPct = 30;    // Brush DOWN position, %  (higher number lifts higher).
 
     reverseMotorX = false;
     reverseMotorY = false;
@@ -24,7 +24,7 @@ Plotter::Plotter(){
     debugMode = true;
     //boolean debugMode = false;
 
-    PaperSizeA4 = false; // true for A4. false for US letter.
+    paperSizeA4 = false; // true for A4. false for US letter.
 
 //    boolean segmentQueued = false;
 //    PVector queuePt1 = new PVector(-1, -1);
@@ -41,13 +41,24 @@ Plotter::Plotter(){
 
     yBrushRestPositionPixels = 6;
 
-//    black = ofColor(25, 25, 25);
-
     doSerialConnect = true;
-    DrawingPath = false;
+    drawingPath = false;
     lastButtonUpdateX = 0;
     lastButtonUpdateY = 0;
-    SubsequentWaitTime = -1;    //How long the following movement will take.
+    subsequentWaitTime = -1;    //How long the following movement will take.
+
+    nextMoveTime = ofGetElapsedTimeMillis();
+
+    motorX = 0;
+    motorY = 0;
+    moveDestX = -1;
+    moveDestY = -1;
+
+    // TODO do we need these??
+    mousePaperLeft =  30;
+    mousePaperRight =  770;
+    mousePaperTop =  62;
+    mousePaperBottom =  600;
 
     connect();
     setup();
@@ -201,82 +212,68 @@ void Plotter::setup() {
         motorsOff();
         sleep(2);
 
-        cout << "SUCCESS" << endl;
+        if (debugMode) {
+            cout << "SUCCESS" << endl;
+        }
     } else {
-        cout << "ERROR DURING SETUP" << endl;
-    }
-}
-
-//--------------------------------------------------------------
-void Plotter::raiseBrush(){
-    //    int waitTime = NextMoveTime - millis();
-    //    if (waitTime > 0)
-    //    {
-    //        raiseBrushStatus = 1; // Flag to raise brush when no longer busy.
-    //    } else
-    //    {
-    //        if (BrushDown == true) {
-    //            if (SerialOnline) {
-    //                myPort.write("SP,0," + str(delayAfterRaisingBrush) + "\r");
-    //                BrushDown = false;
-    //                NextMoveTime = millis() + delayAfterRaisingBrush;
-    //            }
-    //            //      if (debugMode) println("Raise Brush.");
-    //        }
-    //        raiseBrushStatus = -1; // Clear flag.
-    //    }
-    if (brushDown == true) {
-        if (serialOnline) {
-            string message = "SP,0," + std::to_string(10) + "\r";
-            int length = message.length();
-            char char_array[length + 1];
-            strcpy(char_array, message.c_str());
-
-            serial.writeBytes(char_array, 9);
-            brushDown = false;
-            cout << "Raise Brush." << endl;
+        if (debugMode) {
+            cout << "ERROR DURING SETUP" << endl;
         }
     }
 }
 
 //--------------------------------------------------------------
-void Plotter::lowerBrush(){
-    //    int waitTime = NextMoveTime - millis();
-    //    if (waitTime > 0)
-    //    {
-    //        lowerBrushStatus = 1;  // Flag to lower brush when no longer busy.
-    //        // delay (waitTime);  // Wait for prior move to finish:
-    //    } else
-    //    {
-    //        if  (BrushDown == false)
-    //        {
-    //            if (SerialOnline) {
-    //                myPort.write("SP,1," + str(delayAfterLoweringBrush) + "\r");
-    //
-    //                BrushDown = true;
-    //                NextMoveTime = millis() + delayAfterLoweringBrush;
-    //                //lastPosition = new PVector(-1,-1);
-    //            }
-    //            //      if (debugMode) println("Lower Brush.");
-    //        }
-    //        lowerBrushStatus = -1; // Clear flag.
-    //    }
-    if (brushDown == false) {
-        if (serialOnline) {
-            string message = "SP,1," + std::to_string(10) + "\r";
-            int length = message.length();
-            char char_array[length + 1];
-            strcpy(char_array, message.c_str());
+void Plotter::raiseBrush() {
+        int waitTime = nextMoveTime - ofGetElapsedTimeMillis();
+        if (waitTime > 0) {
+            raiseBrushStatus = 1; // Flag to raise brush when no longer busy.
+        } else {
+            if (brushDown == true) {
+                if (serialOnline) {
+                    string message = "SP,0," + std::to_string(10) + "\r";
+                    int length = message.length();
+                    char char_array[length + 1];
+                    strcpy(char_array, message.c_str());
 
-            serial.writeBytes(char_array, length + 1);
-            brushDown = true;
-            cout << "Lower Brush." << endl;
+                    serial.writeBytes(char_array, 9);
+                    brushDown = false;
+                    nextMoveTime = ofGetElapsedTimeMillis() + delayAfterRaisingBrush;
+
+                    if (debugMode) {
+                        cout << "Raise Brush." << endl;
+                    }
+                }
+            }
+            raiseBrushStatus = -1; // Clear flag.
         }
+}
+
+//--------------------------------------------------------------
+void Plotter::lowerBrush() {
+    int waitTime = nextMoveTime - ofGetElapsedTimeMillis();
+    if (waitTime > 0) {
+        lowerBrushStatus = 1;  // Flag to lower brush when no longer busy.
+    } else {
+        if (brushDown == false) {
+            if (serialOnline) {
+                string message = "SP,1," + std::to_string(10) + "\r";
+                int length = message.length();
+                char char_array[length + 1];
+                strcpy(char_array, message.c_str());
+
+                serial.writeBytes(char_array, length + 1);
+                brushDown = true;
+                if (debugMode) {
+                    cout << "Lower Brush." << endl;
+                }
+            }
+        }
+        lowerBrushStatus = -1; // Clear flag.
     }
 }
 
 //--------------------------------------------------------------
-void Plotter::motorsOff(){
+void Plotter::motorsOff() {
     if (serialOnline) {
         string message = "EM,0,0\r";
         int length = message.length();
@@ -284,6 +281,109 @@ void Plotter::motorsOff(){
         strcpy(char_array, message.c_str());
 
         serial.writeBytes(char_array, length + 1);
-        cout << "Motors off." << endl;
+        if (debugMode) {
+            cout << "Motors off." << endl;
+        }
     }
+}
+
+void Plotter::moveRelativeXY(int xD, int yD) {
+    // Change carriage position by (xDelta, yDelta), with XY limit checking, time management, etc.
+    int xTemp = motorX + xD;
+    int yTemp = motorY + yD;
+
+    moveToXY(xTemp, yTemp);
+}
+
+
+void Plotter::moveToXY(int xLoc, int yLoc) {
+    moveDestX = xLoc;
+    moveDestY = yLoc;
+
+    moveToXY();
+}
+
+void Plotter::moveToXY() {
+    int traveltime_ms;
+
+    // Absolute move in motor coordinates, with XY limit checking, time management, etc.
+    // Use MoveToXY(int xLoc, int yLoc) to set destinations.
+
+    int waitTime = nextMoveTime - ofGetElapsedTimeMillis();
+    if (waitTime > 0)
+    {
+        moveStatus = 1;  // Flag this move as not yet completed.
+    } else
+    {
+        if ((moveDestX < 0) || (moveDestY < 0))
+        {
+            // Destination has not been set up correctly.
+            // Re-initialize varaibles and prepare for next move.
+            moveDestX = -1;
+            moveDestY = -1;
+        } else {
+            moveStatus = -1;
+            if (moveDestX > motorMaxX)
+                moveDestX = motorMaxX;
+            else if (moveDestX < motorMinX)
+                moveDestX = motorMinX;
+
+            if (moveDestY > motorMaxY)
+                moveDestY = motorMaxY;
+            else if (moveDestY < motorMinY)
+                moveDestY = motorMinY;
+
+            int xD = moveDestX - motorX;
+            int yD = moveDestY - motorY;
+
+            if ((xD != 0) || (yD != 0)){
+                motorX = moveDestX;
+                motorY = moveDestY;
+
+                int MaxTravel = max(abs(xD), abs(yD));
+                traveltime_ms = int(floor( float(1000 * MaxTravel)/motorSpeed));
+
+                // TODO check this later
+                nextMoveTime = ofGetElapsedTimeMillis() + traveltime_ms - ceil(1000 / 60);
+                // Important correction-- Start next segment sooner than you might expect,
+                // because of the relatively low framerate that the program runs at.
+
+                if (serialOnline) {
+                    if (reverseMotorX)
+                        xD *= -1;
+                    if (reverseMotorY)
+                        yD *= -1;
+
+                    // TODO fix me
+//                    serial.write("XM," + str(traveltime_ms) + "," + str(xD) + "," + str(yD) + "\r");
+                    //General command "XM,duration,axisA,axisB<CR>"
+                }
+
+                // Calculate and animate position location cursor
+                // TODO check this - it was related to animated the cursor and using ani lib
+//                int pos = getMotorPixelPos();
+//                float sec = traveltime_ms/1000.0;
+
+                if (debugMode) {
+                    cout << "Motor X: " + std::to_string(motorX) + "  Motor Y: " + std::to_string(motorY) << endl;
+                }
+            }
+        }
+    }
+
+    // TODO add this ?
+    // SubsequentWaitTime
+}
+
+// Return the [x,y] of the motor position in pixels
+ofVec2f Plotter::getMotorPixelPos() {
+    return ofVec2f((int)(float (motorX) / motorStepsPerPixel) + mousePaperLeft,
+                   (int)(float (motorY) / motorStepsPerPixel) + mousePaperTop + yBrushRestPositionPixels);
+}
+
+// Get float distance between two non-encoded (x,y) positions.
+float Plotter::getDistance(int x1, int y1, int x2, int y2) {
+    int xdiff = abs(x2 - x1);
+    int ydiff = abs(y2 - y1);
+    return sqrt(pow(xdiff, 2) + pow(ydiff, 2));
 }
