@@ -7,7 +7,10 @@ void ofApp::setup(){
 
     // Connect AxiDraw automatically (declaration in h file)
     // Connect Arduino
-    scanSerial();
+    #ifdef _CONNECT_TO_ARDUINO_
+        scanSerial();
+    #endif
+
 
     ofBackground(0);
     ofColor(255);
@@ -26,39 +29,43 @@ void ofApp::setup(){
 
 //--------------------------------------------------------------
 void ofApp::update(){
-    readSensors();
+    #ifdef _CONNECT_TO_ARDUINO_
+        readSensors();
+    #endif
 
     // wait between generation calls
     actualTime = ofGetElapsedTimeMillis();
 
     // TODO: if there is nothing left to draw, generate next division
     // Set timer to 2 sec
-    if (actualTime - delayTimer >= 2000) {
-//    if (generateNext) {
-//        generateNext = false;
+//    if (actualTime - delayTimer >= 2000) {
+    if (generateNext) {
+        generateNext = false;
         delayTimer = ofGetElapsedTimeMillis();
 //        cout << "2 sec" << endl;
         // Iterate through triangle tree leaf nodes
         tree<Triangle>::leaf_iterator iter=tr.begin_leaf();
         while (tr.is_valid(iter)) {
-            if ((*iter).canGenerate && tr.depth(iter) <= 5 && iter.number_of_children() == 0){
-//                if (tr.depth(iter) <= 5) {
-//                    (*iter).canGenerate = false;
-//                }
+            if (tr.depth(iter) < 25 && (*iter).canGenerate && iter.number_of_children() == 0){
                 vector<Triangle> results;
                 int type = ofRandom(4);
+//                type = 2;
                 switch (type){
                     case 0:
                         results = divideTriangleByTwo(iter);
                         break;
                     case 1:
-                        results = divideTriangleByThree(iter);
-                        break;
-                    case 2:
                         results = divideTriangleByFour(iter);
                         break;
-                    case 3:
+                    case 2:
+                        results = nestTriangle(iter);
                         break;
+//                        results = divideTriangleByThree(iter);
+//                        break;
+                        // TODO: implement nesting?
+//                    case 3:
+//                        results = nestTriangle(iter);
+//                        break;
                     default:
                         break;
                 }
@@ -69,8 +76,12 @@ void ofApp::update(){
                 // advance to the next node
                 iter++;
 
+                cout << "TEST" << endl;
                 // add new generated triangles
                 for (int i = 0; i < results.size(); i++) {
+                    if (tr.depth(append_iter) > 4 && ofRandom(100) < 1) {
+//                        results[i].canGenerate = false;
+                    }
                     tr.append_child(append_iter, results[i]);
                 }
             } else {
@@ -99,15 +110,15 @@ void ofApp::draw(){
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
     switch (key){
-        case ' ':
-            plotter.motorsOff();
-            break;
-        case 'u':
-            plotter.raiseBrush();
-            break;
-        case 'd':
-            plotter.lowerBrush();
-            break;
+//        case ' ':
+//            plotter.motorsOff();
+//            break;
+//        case 'u':
+//            plotter.raiseBrush();
+//            break;
+//        case 'd':
+//            plotter.lowerBrush();
+//            break;
         case 'n':
             generateNext = true;
             break;
@@ -387,22 +398,22 @@ vector<Triangle> ofApp::divideTriangleByTwo(tree<Triangle>::iterator pos) {
     ofVec2f newPointB;
     ofVec2f newPointC;
 
-    switch ((int)ofRandom(3)) {
-        case 0:
-            newPointA = (*pos).pointA;
-            newPointB = (*pos).pointB;
-            newPointC = (*pos).pointC;
-            break;
-        case 1:
-            newPointA = (*pos).pointB;
-            newPointB = (*pos).pointC;
-            newPointC = (*pos).pointA;
-            break;
-        case 2:
-            newPointA = (*pos).pointC;
-            newPointB = (*pos).pointA;
-            newPointC = (*pos).pointB;
-            break;
+    int sideAB = (*pos).pointA.distance((*pos).pointB);
+    int sideBC = (*pos).pointB.distance((*pos).pointC);
+    int sideCA = (*pos).pointC.distance((*pos).pointA);
+
+    if (sideAB > sideBC && sideAB > sideCA) {
+        newPointA = (*pos).pointC;
+        newPointB = (*pos).pointA;
+        newPointC = (*pos).pointB;
+    } else if (sideBC > sideCA && sideBC > sideAB){
+        newPointA = (*pos).pointA;
+        newPointB = (*pos).pointB;
+        newPointC = (*pos).pointC;
+    } else {
+        newPointA = (*pos).pointB;
+        newPointB = (*pos).pointC;
+        newPointC = (*pos).pointA;
     }
 
     float newPointX = (newPointB.x + newPointC.x)/2;
@@ -484,6 +495,50 @@ vector<Triangle> ofApp::divideTriangleByFour(tree<Triangle>::iterator pos) {
 
     return newTriangles;
 }
+
+vector<Triangle> ofApp::nestTriangle(tree<Triangle>::iterator pos) {
+    vector<Triangle> newTriangles;
+
+    ofVec2f newPointA = (*pos).pointA;
+    ofVec2f newPointB = (*pos).pointB;
+    ofVec2f newPointC = (*pos).pointC;
+
+    float newPointX = (newPointA.x + newPointB.x + newPointC.x)/3;
+    float newPointY = (newPointA.y + newPointB.y + newPointC.y)/3;
+
+    ofPolyline segment1;
+    ofPolyline segment2;
+    ofPolyline segment3;
+    segment1.addVertex(newPointA.x, newPointA.y);
+    segment1.addVertex(newPointX, newPointY);
+
+    segment2.addVertex(newPointB.x, newPointB.y);
+    segment2.addVertex(newPointX, newPointY);
+
+    segment3.addVertex(newPointC.x, newPointC.y);
+    segment3.addVertex(newPointX, newPointY);
+
+    newPointA = segment1.getPointAtPercent(.04f);
+    newPointB = segment2.getPointAtPercent(.04f);
+    newPointC = segment3.getPointAtPercent(.04f);
+
+    newTriangles.push_back({ newPointA, newPointB, newPointC, true });
+
+    ofPolyline divider;
+    divider.addVertex(newPointA.x, newPointA.y);
+    divider.addVertex(newPointB.x, newPointB.y);
+    divider.addVertex(newPointC.x, newPointC.y);
+    divider.addVertex(newPointA.x, newPointA.y);
+
+    lines.push_back(divider);
+    linesCurrent.push_back(divider);
+
+    lines.push_back(divider);
+    linesCurrent.push_back(divider);
+
+    return newTriangles;
+}
+
 
 string ofApp::ofxGetSerialString(ofSerial &serialArduino, char until) {
     static string str;

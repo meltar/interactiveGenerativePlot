@@ -13,6 +13,8 @@
 
 #endif /* plotter_h */
 
+//#define _CONNECT_TO_AXIDRAW_
+
 class Plotter {
 
     float motorSpeed;
@@ -98,5 +100,6 @@ class Plotter {
     void moveToXY();
     ofVec2f getMotorPixelPos();
     float getDistance(int x1, int y1, int x2, int y2);
+    void zero();
     private:
 };

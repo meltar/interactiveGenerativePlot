@@ -60,8 +60,10 @@ Plotter::Plotter() {
     mousePaperTop =  62;
     mousePaperBottom =  600;
 
+#ifdef _CONNECT_TO_AXIDRAW_
     connect();
     setup();
+#endif
 }
 
 Plotter::~Plotter(){
@@ -386,4 +388,24 @@ float Plotter::getDistance(int x1, int y1, int x2, int y2) {
     int xdiff = abs(x2 - x1);
     int ydiff = abs(y2 - y1);
     return sqrt(pow(xdiff, 2) + pow(ydiff, 2));
+}
+
+void Plotter::zero() {
+    // Mark current location as (0,0) in motor coordinates.
+    // Manually move the motor carriage to the left-rear (upper left) corner before executing this command.
+
+    motorX = 0;
+    motorY = 0;
+
+    moveStatus = -1;
+    moveDestX = -1;
+    moveDestY = -1;
+
+    // Calculate and animate position location cursor
+    ofVec2f pos = getMotorPixelPos();
+    float sec = .25;
+
+    if (debugMode) {
+        cout << "Motor X: " + std::to_string(motorX) + "  Motor Y: " + std::to_string(motorY) << endl;
+    }
 }

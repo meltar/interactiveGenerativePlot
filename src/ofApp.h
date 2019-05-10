@@ -4,7 +4,8 @@
 #include "tree.hh"
 #include "plotter.h"
 
-#define _USE_AXIDRAW_
+//#define _CONNECT_TO_AXIDRAW_
+//#define _CONNECT_TO_ARDUINO_
 
 struct Triangle {
     ofVec2f pointA;
@@ -30,7 +31,9 @@ public:
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
 
-    Plotter plotter;
+    #ifdef _CONNECT_TO_AXIDRAW_
+        Plotter plotter;
+    #endif
     ofSerial serialArduino;
     string arduinoData;
     list<int> sensorVertical;
@@ -51,6 +54,7 @@ private:
     vector<Triangle> divideTriangleByTwo(tree<Triangle>::iterator pos);
     vector<Triangle> divideTriangleByThree(tree<Triangle>::iterator pos);
     vector<Triangle> divideTriangleByFour(tree<Triangle>::iterator pos);
+    vector<Triangle> nestTriangle(tree<Triangle>::iterator pos);
     string ofxGetSerialString(ofSerial &serialArduino, char until);
     string ofxTrimStringRight(string str);// trim right trailing spaces
     string ofxTrimStringLeft(string str);// trim left trailing spaces
