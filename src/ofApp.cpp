@@ -60,11 +60,8 @@ void ofApp::update(){
                     case 2:
                         results = nestTriangle(iter);
                         break;
-//                        results = divideTriangleByThree(iter);
-//                        break;
-                        // TODO: implement nesting?
 //                    case 3:
-//                        results = nestTriangle(iter);
+//                        results = divideTriangleByThree(iter);
 //                        break;
                     default:
                         break;
@@ -76,12 +73,11 @@ void ofApp::update(){
                 // advance to the next node
                 iter++;
 
-                cout << "TEST" << endl;
                 // add new generated triangles
                 for (int i = 0; i < results.size(); i++) {
-                    if (tr.depth(append_iter) > 4 && ofRandom(100) < 1) {
+//                    if (tr.depth(append_iter) > 4 && ofRandom(100) < 1) {
 //                        results[i].canGenerate = false;
-                    }
+//                    }
                     tr.append_child(append_iter, results[i]);
                 }
             } else {
@@ -281,29 +277,32 @@ void ofApp::readSensors(){
     // TODO: read and store sensor values
     if (serialArduino.available() > 0) {
         // read the incoming bytes:
-        arduinoData = ofxGetSerialString(serialArduino, '\n');
-        if (!arduinoData.empty()) {
-            int loc = arduinoData.find(",");
-            if(loc > 0){
+        try {
+            arduinoData = ofxGetSerialString(serialArduino, '\n');
+            if (!arduinoData.empty()) {
+                int loc = arduinoData.find(",");
+                if(loc > 0){
 
-                int vertical = std::stoi(arduinoData.substr(0, loc));
-                int horizontal = std::stoi(arduinoData.substr(loc + 1, arduinoData.length() - 1));
-                if (vertical < 10000){
-                    sensorVertical.push_front(vertical);
-                    if(sensorVertical.size() >= 5) {
-                        sensorVertical.pop_back();
+                    int vertical = std::stoi(arduinoData.substr(0, loc));
+                    int horizontal = std::stoi(arduinoData.substr(loc + 1, arduinoData.length() - 1));
+                    if (vertical < 10000){
+                        sensorVertical.push_front(vertical);
+                        if(sensorVertical.size() >= 5) {
+                            sensorVertical.pop_back();
+                        }
                     }
-                }
-                if (horizontal < 10000){
-                    sensorHorizontal.push_front(horizontal);
-                    if(sensorHorizontal.size() >= 5) {
-                        sensorHorizontal.pop_back();
+                    if (horizontal < 10000){
+                        sensorHorizontal.push_front(horizontal);
+                        if(sensorHorizontal.size() >= 5) {
+                            sensorHorizontal.pop_back();
+                        }
                     }
-                }
-
 //                cout << "Horizontal: " + std::to_string(sensorHorizontal.front()) << endl;
 //                cout << "Vertical: " + std::to_string(sensorVertical.front()) << endl;
+                }
             }
+        } catch(exception& e){
+            cout << "Error reading sensor" << endl;
         }
     }
 }
