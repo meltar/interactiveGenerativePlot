@@ -106,17 +106,25 @@ void ofApp::draw(){
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
     switch (key){
-//        case ' ':
-//            plotter.motorsOff();
-//            break;
-//        case 'u':
-//            plotter.raiseBrush();
-//            break;
-//        case 'd':
-//            plotter.lowerBrush();
-//            break;
+        case ' ':
+            plotter.motorsOff();
+            break;
+        case 'u':
+            plotter.raiseBrush();
+            break;
+        case 'd':
+            plotter.lowerBrush();
+            break;
         case 'n':
             generateNext = true;
+            break;
+        case 'p':
+            plotter.pause();
+            break;
+        case 'h':
+            plotter.raiseBrush();
+            plotter.moveToXY(0, 0);
+            linesCurrent.clear();
             break;
     }
 }

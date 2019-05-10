@@ -44,8 +44,6 @@ class Plotter {
     int motorMinY;
     int motorMaxX;
     int motorMaxY;
-//    ofColor black;
-//    ofColor PenColor;
     Boolean firstPath;
     Boolean doSerialConnect = true;
     Boolean serialOnline;
@@ -60,7 +58,7 @@ class Plotter {
     int motorY;
     int motorLocatorX;
     int motorLocatorY;
-//    PVector lastPosition;
+    ofVec2f lastPosition;
     Boolean forceRedraw;
     Boolean shiftKeyDown;
     Boolean keyup;
@@ -94,6 +92,8 @@ class Plotter {
     void setup();
     void raiseBrush();
     void lowerBrush();
+    void checkServiceBrush();
+    Boolean serviceBrush();
     void motorsOff();
     void moveRelativeXY(int xD, int yD);
     void moveToXY(int xLoc, int yLoc);
@@ -101,5 +101,6 @@ class Plotter {
     ofVec2f getMotorPixelPos();
     float getDistance(int x1, int y1, int x2, int y2);
     void zero();
+    void pause();
     private:
 };

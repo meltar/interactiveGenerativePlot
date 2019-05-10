@@ -30,8 +30,8 @@ Plotter::Plotter() {
 //    PVector queuePt1 = new PVector(-1, -1);
 //    PVector queuePt2 = new PVector(-1, -1);
 
-    float MotorStepsPerPixel = 32.1;// Good for 1/16 steps-- standard behavior.
-    float PixelsPerInch = 63.3;
+    float motorStepsPerPixel = 32.1;// Good for 1/16 steps-- standard behavior.
+    float pixelsPerInch = 63.3;
 
     // Hardware resolution: 1016 steps per inch @ 50% max resolution
     // Horizontal extent in this window frame is 740 px.
@@ -54,16 +54,33 @@ Plotter::Plotter() {
     moveDestX = -1;
     moveDestY = -1;
 
-    // TODO do we need these??
+    motorMinX = 0;
+    motorMinY = 0;
+
     mousePaperLeft =  30;
     mousePaperRight =  770;
     mousePaperTop =  62;
     mousePaperBottom =  600;
+    motorMaxX = int(floor(float(mousePaperRight - mousePaperLeft) * motorStepsPerPixel)) ;
+    motorMaxY = int(floor(float(mousePaperBottom - mousePaperTop) * motorStepsPerPixel)) ;
 
-#ifdef _CONNECT_TO_AXIDRAW_
+    lastPosition = ofVec2f(-1, -1);
+
+    servoUp = 7500 + 175 * servoUpPct;    // Brush UP position, native units
+    servoPaint = 7500 + 175 * servoPaintPct;   // Brush DOWN position, native units.
+
+    if (paperSizeA4) {
+        mousePaperRight = round(mousePaperLeft + pixelsPerInch * 297/25.4);
+        mousePaperBottom = round(mousePaperTop + pixelsPerInch * 210/25.4);
+    } else {
+        mousePaperRight = round(mousePaperLeft + pixelsPerInch * 11.0);
+        mousePaperBottom = round(mousePaperTop + pixelsPerInch * 8.5);
+    }
+
+//#ifdef _CONNECT_TO_AXIDRAW_
     connect();
     setup();
-#endif
+//#endif
 }
 
 Plotter::~Plotter(){
@@ -92,8 +109,8 @@ void Plotter::connect() {
     }
 
     if (serialErr == false) {
-        string count = std::to_string(portCount);
-        cout << "\nI found " + count + " serial ports, which are:" << endl;
+//        string count = std::to_string(portCount);
+//        cout << "\nI found " + count + " serial ports, which are:" << endl;
         //        cout << serial.getDeviceList(); << endl;
 
         //        String  os=System.getProperty("os.name").toLowerCase();
@@ -206,11 +223,18 @@ void Plotter::setup() {
         serial.writeBytes(char_array, length + 1);
 
         // Ensure that we actually raise the brush:
-        brushDown = true;
-        raiseBrush();
-        sleep(2);
+        brushDown = false;
         lowerBrush();
         sleep(2);
+        raiseBrush();
+        sleep(2);
+        moveToXY(500, 500);
+        sleep(2);
+        moveToXY(1100, 1100);
+        sleep(2);
+        moveToXY(0, 0);
+        sleep(5);
+
         motorsOff();
         sleep(2);
 
@@ -307,7 +331,7 @@ void Plotter::moveToXY(int xLoc, int yLoc) {
 
 void Plotter::moveToXY() {
     int traveltime_ms;
-
+     cout << "MOVING??? step 1" << endl;
     // Absolute move in motor coordinates, with XY limit checking, time management, etc.
     // Use MoveToXY(int xLoc, int yLoc) to set destinations.
 
@@ -317,6 +341,8 @@ void Plotter::moveToXY() {
         moveStatus = 1;  // Flag this move as not yet completed.
     } else
     {
+        cout << "MOVING??? step 2" << endl;
+
         if ((moveDestX < 0) || (moveDestY < 0))
         {
             // Destination has not been set up correctly.
@@ -324,6 +350,8 @@ void Plotter::moveToXY() {
             moveDestX = -1;
             moveDestY = -1;
         } else {
+            cout << "MOVING??? step 3" << endl;
+
             moveStatus = -1;
             if (moveDestX > motorMaxX)
                 moveDestX = motorMaxX;
@@ -338,12 +366,20 @@ void Plotter::moveToXY() {
             int xD = moveDestX - motorX;
             int yD = moveDestY - motorY;
 
+            if (debugMode) {
+                cout << "moveDestX: " + std::to_string(moveDestX) + "motorX: " + std::to_string(motorX) + ",  xD: " + std::to_string(xD) + "motorMaX: " + std::to_string(motorMaxX) << endl;
+            }
+            if (debugMode) {
+                cout << "xD: " + std::to_string(xD) + "  yD: " + std::to_string(yD) << endl;
+            }
             if ((xD != 0) || (yD != 0)){
+                cout << "MOVING??? step 4" << endl;
+
                 motorX = moveDestX;
                 motorY = moveDestY;
 
-                int MaxTravel = max(abs(xD), abs(yD));
-                traveltime_ms = int(floor( float(1000 * MaxTravel)/motorSpeed));
+                int maxTravel = max(abs(xD), abs(yD));
+                traveltime_ms = int(floor( float(1000 * maxTravel)/motorSpeed));
 
                 // TODO check this later
                 nextMoveTime = ofGetElapsedTimeMillis() + traveltime_ms - ceil(1000 / 60);
@@ -351,14 +387,19 @@ void Plotter::moveToXY() {
                 // because of the relatively low framerate that the program runs at.
 
                 if (serialOnline) {
+                    cout << "MOVING??? step 5" << endl;
+
                     if (reverseMotorX)
                         xD *= -1;
                     if (reverseMotorY)
                         yD *= -1;
 
-                    // TODO fix me
-//                    serial.write("XM," + str(traveltime_ms) + "," + str(xD) + "," + str(yD) + "\r");
                     //General command "XM,duration,axisA,axisB<CR>"
+                    string message = "XM," + std::to_string(traveltime_ms) + "," + std::to_string(xD) + "," + std::to_string(yD) + "\r";
+                    int length = message.length();
+                    char char_array[length + 1];
+                    strcpy(char_array, message.c_str());
+                    serial.writeBytes(char_array, length + 1);
                 }
 
                 // Calculate and animate position location cursor
@@ -372,9 +413,6 @@ void Plotter::moveToXY() {
             }
         }
     }
-
-    // TODO add this ?
-    // SubsequentWaitTime
 }
 
 // Return the [x,y] of the motor position in pixels
@@ -409,3 +447,307 @@ void Plotter::zero() {
         cout << "Motor X: " + std::to_string(motorX) + "  Motor Y: " + std::to_string(motorY) << endl;
     }
 }
+
+// Do we need this?
+// This is for adding paint or water
+
+// I think all the todo items are points
+//void Plotter::checkServiceBrush() {
+//    if (serviceBrush() == false) {
+//        if (ofGetElapsedTimeMillis() > nextMoveTime) {
+//            Boolean actionItem = false;
+//            int intTemp = -1;
+//            float inputTemp = -1.0;
+//            PVector toDoItem;
+//
+//            if ((ToDoList.length > (indexDone + 1))   && (!paused)) {
+//                actionItem = true;
+//                toDoItem = ToDoList[1 + indexDone];
+//                inputTemp = toDoItem.x;
+//                indexDone++;
+//            }
+//
+//            if (actionItem) {  // Perform next action from ToDoList::
+//
+//                if (inputTemp >= 0) { // Move the carriage to draw a path segment!
+//                    toDoItem = ToDoList[indexDone];
+//                    float x2 = toDoItem.x;
+//                    float y2 = toDoItem.y;
+//
+//                    int x1 = round( (x2 - float(mousePaperLeft)) * motorStepsPerPixel);
+//                    int y1 = round( (y2 - float(mousePaperTop)) * motorStepsPerPixel);
+//
+//                    moveToXY(x1, y1);
+//                    //println("Moving to: " + str(x2) + ", " + str(y2));
+//
+//                    if (lastPosition.x == -1) {
+//                        lastPosition = toDoItem;
+//                        //println("Starting point: Init.");
+//                    }
+//
+//                    lastPosition = toDoItem;
+//
+//                    /*
+//                     IF next item in ToDoList is ALSO a move, then calculate the next move and queue it to the EBB at this time.
+//                     Save the duration of THAT move as "SubsequentWaitTime."
+//
+//                     When the first (pre-existing) move completes, we will check to see if SubsequentWaitTime is defined (i.e., >= 0).
+//                     If SubsequentWaitTime is defined, then (1) we add that value to the NextMoveTime:
+//
+//                     NextMoveTime = millis() + SubsequentWaitTime;
+//                     SubsequentWaitTime = -1;
+//
+//                     We also (2) queue up that segment to be drawn.
+//
+//                     We also (3) queue up the next move, if there is one that could be queued.
+//
+//                     */
+//                } else {
+//                    intTemp = round(-1 * inputTemp);
+//
+//                    if ((intTemp > 9) && (intTemp < 20)) {  // Change paint color
+//                        intTemp -= 10;
+//                    } else if (intTemp == 30) {
+//                        raiseBrush();
+//                    } else if (intTemp == 31) {
+//                        lowerBrush();
+//                    } else if (intTemp == 35) {
+//                        moveToXY(0, 0);
+//                    }
+//                }
+//            }
+//        }
+//}
+
+
+Boolean Plotter::serviceBrush() {
+    // Manage processes of getting paint, water, and cleaning the brush,
+    // as well as general lifts and moves.  Ensure that we allow time for the
+    // brush to move, and wait respectfully, without local wait loops, to
+    // ensure good performance for the artist.
+    // Returns true if servicing is still taking place, and false if idle.
+
+    Boolean serviceStatus = false;
+
+    int waitTime = nextMoveTime - ofGetElapsedTimeMillis();
+    if (waitTime >= 0) {
+        serviceStatus = true;
+        // We still need to wait for *something* to finish!
+    } else {
+        if (raiseBrushStatus >= 0) {
+            raiseBrush();
+            serviceStatus = true;
+        } else if (lowerBrushStatus >= 0) {
+            lowerBrush();
+            serviceStatus = true;
+        } else if (moveStatus >= 0) {
+            moveToXY(); // Perform next move, if one is pending.
+            serviceStatus = true;
+        }
+    }
+    return serviceStatus;
+}
+
+
+//void Plotter::drawToDoList() {
+//    // Erase all painting on main image background, and draw the existing "ToDo" list
+//    // on the off-screen buffer.
+//
+//    int j = ToDoList.length;
+//    float x1, x2, y1, y2;
+//
+//    float brightness;
+//    color white = color(255, 255, 255);
+//
+//    if ((indexDrawn + 1) < j)
+//    {
+//
+//        // Ready the offscreen buffer for drawing onto
+//        offScreen.beginDraw();
+//
+//        if (indexDrawn < 0) {
+//            offScreen.image(imgBackground, 0, 0, 800, 631);  // Copy original background image into place!
+//
+//            offScreen.noFill();
+//            offScreen.strokeWeight(0.5);
+//
+//            if (PaperSizeA4)
+//            {
+//                offScreen.stroke(128, 128, 255);  // Light Blue: A4
+//                float rectW = PixelsPerInch * 297/25.4;
+//                float rectH = PixelsPerInch * 210/25.4;
+//                offScreen.rect(float(MousePaperLeft), float(MousePaperTop), rectW, rectH);
+//            } else
+//            {
+//                offScreen.stroke(255, 128, 128); // Light Red: US Letter
+//                float rectW = PixelsPerInch * 11.0;
+//                float rectH = PixelsPerInch * 8.5;
+//                offScreen.rect(float(MousePaperLeft), float(MousePaperTop), rectW, rectH);
+//            }
+//        } else
+//            offScreen.image(imgMain, 0, 0);
+//
+//        offScreen.strokeWeight(1);
+//        //offScreen.stroke(PenColor);
+//
+//        brightness = 0;
+//        color DoneColor = lerpColor(PenColor, white, brightness);
+//
+//        brightness = 0.8;
+//        color ToDoColor = lerpColor(PenColor, white, brightness);
+//        x1 = 0;
+//        y1 = 0;
+//
+//        boolean virtualPenDown = false;
+//
+//        int index = 0;
+//        if (index < 0)
+//            index = 0;
+//        while ( index < j)
+//        {
+//            PVector toDoItem = ToDoList[index];
+//
+//            x2 = toDoItem.x;
+//            y2 = toDoItem.y;
+//
+//            if (x2 >= 0) {
+//                if (virtualPenDown)
+//                {
+//                    if (index < indexDone)
+//                        offScreen.stroke(DoneColor);
+//                    else
+//                        offScreen.stroke(ToDoColor);
+//
+//                    offScreen.line(x1, y1, x2, y2); // Preview lines that are not yet on paper
+//
+//                    //println("Draw line: "+str(x1)+", "+str(y1)+", "+str(x2) + ", "+str(y2));
+//
+//                    x1 = x2;
+//                    y1 = y2;
+//                } else {
+//                    //println("Pen up move");
+//                    x1 = x2;
+//                    y1 = y2;
+//                }
+//            } else {
+//                int x3 = -1 * round(x2);
+//                if (x3 == 30)
+//                {
+//                    virtualPenDown = false;
+//                    //println("pen up");
+//                } else if (x3 == 31)
+//                {
+//                    virtualPenDown = true;
+//                    //println("pen down");
+//                } else if (x3 == 35)
+//                {// Home;  MoveToXY(0, 0); Do not draw home moves.
+//                    //if (virtualPenDown)
+//                    //offScreen.line(x1, y1, 0, 0); // Preview lines that are not yet on paper
+//                    x1 = 0;
+//                    y1 = 0;
+//                }
+//            }
+//            index++;
+//        }
+//
+//        offScreen.endDraw();
+//
+//        imgMain = offScreen.get(0, 0, offScreen.width, offScreen.height);
+//    }
+//}
+
+
+void Plotter::pause() {
+    if (debugMode) {
+        cout << "Pause detected." << endl;
+    }
+    if (paused) {
+        if (debugMode) {
+            cout << "Resuming AxiDraw." << endl;
+        }
+
+        paused = false;
+        if (brushDownAtPause) {
+            int waitTime = nextMoveTime - ofGetElapsedTimeMillis();
+            if (waitTime > 0)
+            {
+                sleep(waitTime);  // Wait for prior move to finish:
+            }
+
+            if (brushDown) {
+                raiseBrush();
+            }
+
+            waitTime = nextMoveTime - ofGetElapsedTimeMillis();
+            if (waitTime > 0)
+            {
+                sleep(waitTime);  // Wait for prior move to finish:
+            }
+
+            moveToXY(xLocAtPause, yLocAtPause);
+
+            waitTime = nextMoveTime - ofGetElapsedTimeMillis();
+            if (waitTime > 0)
+            {
+                sleep(waitTime);  // Wait for prior move to finish:
+            }
+
+            lowerBrush();
+        }
+    } else {
+        if (debugMode) {
+            cout << "Pausing AxiDraw." << endl;
+        }
+        paused = true;
+
+        if (brushDown) {
+            brushDownAtPause = true;
+            raiseBrush();
+        } else
+            brushDownAtPause = false;
+
+        xLocAtPause = motorX;
+        yLocAtPause = motorY;
+    }
+}
+
+//void Plotter::generateArtwork(float xStart, float yStart, float radius, int steps)
+//{
+//    int i = 0;
+//    float r;
+//    float xPos = xStart;
+//    float yPos = yStart;
+//
+//    ToDoList = (PVector[]) append(ToDoList, new PVector(-30, 0)); //Command 30 (raise pen)
+//
+//    // Command Code: Move to first (X,Y) point
+//    ToDoList = (PVector[]) append(ToDoList, new PVector(xPos, yPos));
+//
+//    ToDoList = (PVector[]) append(ToDoList, new PVector(-31, 0)); //Command 31 (lower pen)
+//
+//
+//    // Trivial example of a generative method:
+//    // Construct a random walk of constant-length steps.
+//    // Continue walking until maximum number of steps OR
+//    //     until we hit the walls of our page.
+//
+//    while (i < steps)
+//    {
+//        r = random(TWO_PI);
+//
+//        xPos = xPos + (radius * cos(r));
+//        yPos = yPos + (radius * sin(r));
+//
+//        if ((xPos < MousePaperLeft) || (xPos > MousePaperRight))
+//            break;
+//        if ((yPos < MousePaperTop) || (yPos > MousePaperBottom))
+//            break;
+//
+//        // Command Code: Move to (X,Y)
+//        ToDoList = (PVector[]) append(ToDoList, new PVector(xPos, yPos));
+//
+//        i++;
+//    }
+//
+//    ToDoList = (PVector[]) append(ToDoList, new PVector(-30, 0)); //Command 30 (raise pen)
+//}

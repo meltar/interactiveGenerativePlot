@@ -4,8 +4,8 @@
 #include "tree.hh"
 #include "plotter.h"
 
-//#define _CONNECT_TO_AXIDRAW_
-//#define _CONNECT_TO_ARDUINO_
+#define _CONNECT_TO_AXIDRAW_
+#define _CONNECT_TO_ARDUINO_
 
 struct Triangle {
     ofVec2f pointA;
