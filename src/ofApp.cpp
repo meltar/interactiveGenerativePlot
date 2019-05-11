@@ -47,9 +47,9 @@ void ofApp::update(){
         // Iterate through triangle tree leaf nodes
         tree<Triangle>::leaf_iterator iter=tr.begin_leaf();
         while (tr.is_valid(iter)) {
-            if (tr.depth(iter) < 25 && (*iter).canGenerate && iter.number_of_children() == 0){
+            if (tr.depth(iter) < 25 && (*iter).canGenerate){
                 vector<Triangle> results;
-                int type = ofRandom(4);
+                int type = ofRandom(3);
 //                type = 2;
                 switch (type){
                     case 0:
@@ -76,13 +76,16 @@ void ofApp::update(){
 
                 // add new generated triangles
                 for (int i = 0; i < results.size(); i++) {
-//                    if (tr.depth(append_iter) > 4 && ofRandom(100) < 1) {
-//                        results[i].canGenerate = false;
-//                    }
+                    if (tr.depth(append_iter) > 4 && ofRandom(100) < 5) {
+                        results[i].canGenerate = false;
+                    }
+                    if (tr.depth(append_iter) > 12) {
+                        results[i].canGenerate = false;
+                    }
                     tr.append_child(append_iter, results[i]);
                 }
             } else {
-                break;
+                iter++;
             }
         }
     }
@@ -327,7 +330,7 @@ void ofApp::setupTriangles(){
     float width = ofGetWidth();
     float height= ofGetHeight();
 
-    float adjustment = ofRandom(-450, 450);
+    float adjustment = ofRandom(350, 350);
     int side = ofRandom(1, 4);
 
     // set up iterator to add triangles
@@ -340,7 +343,7 @@ void ofApp::setupTriangles(){
             x1 = 0;
             y1 = height;
 
-            x2 = width/2 + adjustment;
+            x2 = width/2 + ofRandom(-width/4, width/4);
             y2 = 0;
 
             x3 = width;
@@ -355,7 +358,7 @@ void ofApp::setupTriangles(){
             y1 = 0;
 
             x2 = 0;
-            y2 = height/2 + adjustment;
+            y2 = height/2 + ofRandom(-height/4, height/4);
 
             x3 = width;
             y3 = height;
@@ -368,7 +371,7 @@ void ofApp::setupTriangles(){
             x1 = width;
             y1 = 0;
 
-            x2 = width/2 + adjustment;
+            x2 = width/2 + ofRandom(-width/4, width/4);
             y2 = height;
 
             x3 = 0;
@@ -383,7 +386,7 @@ void ofApp::setupTriangles(){
             y1 = 0;
 
             x2 = width;
-            y2 = height/2 + adjustment;
+            y2 = height/2 + ofRandom(-height/4, height/4);
 
             x3 = 0;
             y3 = height;
