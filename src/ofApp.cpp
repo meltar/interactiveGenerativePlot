@@ -14,6 +14,7 @@ void ofApp::setup(){
 
     ofBackground(0);
     ofColor(255);
+//    ofColor(0);
 //    ofSeedRandom(0);
 
     ofPolyline outline;
@@ -89,10 +90,13 @@ void ofApp::update(){
 
 //--------------------------------------------------------------
 void ofApp::draw(){
+
+    ofBeginSaveScreenAsSVG("output.svg");
     // draw all lines on the screen
     for(int i = 0; i < lines.size(); i++){
         lines[i].draw();
     }
+    ofEndSaveScreenAsSVG();
 
     // draw new lines with AxiDraw
     while (!linesCurrent.empty())
@@ -539,10 +543,6 @@ vector<Triangle> ofApp::nestTriangle(tree<Triangle>::iterator pos) {
 
     lines.push_back(divider);
     linesCurrent.push_back(divider);
-
-    lines.push_back(divider);
-    linesCurrent.push_back(divider);
-
     return newTriangles;
 }
 

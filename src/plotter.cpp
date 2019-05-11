@@ -30,8 +30,8 @@ Plotter::Plotter() {
 //    PVector queuePt1 = new PVector(-1, -1);
 //    PVector queuePt2 = new PVector(-1, -1);
 
-    float motorStepsPerPixel = 32.1;// Good for 1/16 steps-- standard behavior.
-    float pixelsPerInch = 63.3;
+    motorStepsPerPixel = 32.1;// Good for 1/16 steps-- standard behavior.
+    pixelsPerInch = 63.3;
 
     // Hardware resolution: 1016 steps per inch @ 50% max resolution
     // Horizontal extent in this window frame is 740 px.
@@ -43,9 +43,14 @@ Plotter::Plotter() {
 
     doSerialConnect = true;
     drawingPath = false;
-    lastButtonUpdateX = 0;
-    lastButtonUpdateY = 0;
+//    lastButtonUpdateX = 0;
+//    lastButtonUpdateY = 0;
     subsequentWaitTime = -1;    //How long the following movement will take.
+
+    lastPosition = ofVec2f(-1, -1);
+
+    servoUp = 7500 + 175 * servoUpPct;    // Brush UP position, native units
+    servoPaint = 7500 + 175 * servoPaintPct;   // Brush DOWN position, native units.
 
     nextMoveTime = ofGetElapsedTimeMillis();
 
@@ -57,25 +62,24 @@ Plotter::Plotter() {
     motorMinX = 0;
     motorMinY = 0;
 
-    mousePaperLeft =  30;
-    mousePaperRight =  770;
-    mousePaperTop =  62;
-    mousePaperBottom =  600;
+    // Used for calculating movement for motors
+    mousePaperLeft =  0;
+    mousePaperRight =  740;
+    mousePaperTop =  0;
+    mousePaperBottom =  538;
+
     motorMaxX = int(floor(float(mousePaperRight - mousePaperLeft) * motorStepsPerPixel)) ;
     motorMaxY = int(floor(float(mousePaperBottom - mousePaperTop) * motorStepsPerPixel)) ;
 
-    lastPosition = ofVec2f(-1, -1);
-
-    servoUp = 7500 + 175 * servoUpPct;    // Brush UP position, native units
-    servoPaint = 7500 + 175 * servoPaintPct;   // Brush DOWN position, native units.
-
-    if (paperSizeA4) {
-        mousePaperRight = round(mousePaperLeft + pixelsPerInch * 297/25.4);
-        mousePaperBottom = round(mousePaperTop + pixelsPerInch * 210/25.4);
-    } else {
-        mousePaperRight = round(mousePaperLeft + pixelsPerInch * 11.0);
-        mousePaperBottom = round(mousePaperTop + pixelsPerInch * 8.5);
-    }
+    mousePaperRight = round(pixelsPerInch * 11.0);
+    mousePaperBottom = round(pixelsPerInch * 8.5 );
+//    if (paperSizeA4) {
+//        mousePaperRight = round(mousePaperLeft + pixelsPerInch * 297/25.4);
+//        mousePaperBottom = round(mousePaperTop + pixelsPerInch * 210/25.4);
+//    } else {
+//        mousePaperRight = round(mousePaperLeft + pixelsPerInch * 11.0);
+//        mousePaperBottom = round(mousePaperTop + pixelsPerInch * 8.5);
+//    }
 
 //#ifdef _CONNECT_TO_AXIDRAW_
     connect();
@@ -223,21 +227,20 @@ void Plotter::setup() {
         serial.writeBytes(char_array, length + 1);
 
         // Ensure that we actually raise the brush:
-        brushDown = false;
-        lowerBrush();
-        sleep(2);
-        raiseBrush();
-        sleep(2);
-        moveToXY(500, 500);
-        sleep(2);
-        moveToXY(1100, 1100);
-        sleep(2);
-        moveToXY(0, 0);
-        sleep(5);
+//        brushDown = false;
+//        lowerBrush();
+//        sleep(2);
+//        raiseBrush();
+//        sleep(2);
+//
+//
+//
+//        moveToXY2(740, 538);
+//        moveToXY2(0, 0);
+//        moveToXY2(0, 0);
+
 
         motorsOff();
-        sleep(2);
-
         if (debugMode) {
             cout << "SUCCESS" << endl;
         }
@@ -321,6 +324,12 @@ void Plotter::moveRelativeXY(int xD, int yD) {
     moveToXY(xTemp, yTemp);
 }
 
+void Plotter::moveToXY2(int xLoc, int yLoc) {
+    do {
+        moveToXY(xLoc * motorStepsPerPixel, yLoc * motorStepsPerPixel);
+        ofSleepMillis(50);
+    } while (moveStatus >= 1);
+}
 
 void Plotter::moveToXY(int xLoc, int yLoc) {
     moveDestX = xLoc;
@@ -367,10 +376,8 @@ void Plotter::moveToXY() {
             int yD = moveDestY - motorY;
 
             if (debugMode) {
-                cout << "moveDestX: " + std::to_string(moveDestX) + "motorX: " + std::to_string(motorX) + ",  xD: " + std::to_string(xD) + "motorMaX: " + std::to_string(motorMaxX) << endl;
-            }
-            if (debugMode) {
-                cout << "xD: " + std::to_string(xD) + "  yD: " + std::to_string(yD) << endl;
+                cout << "moveDestX: " + std::to_string(moveDestX) + ", motorX: " + std::to_string(motorX) + ",  xD: " + std::to_string(xD) + ", motorMaX: " + std::to_string(motorMaxX) << endl;
+                cout << "moveDestY: " + std::to_string(moveDestY) + ", motorY: " + std::to_string(motorY) + ",  yD: " + std::to_string(yD) + ", motorMaY: " + std::to_string(motorMaxY) << endl;
             }
             if ((xD != 0) || (yD != 0)){
                 cout << "MOVING??? step 4" << endl;
@@ -396,6 +403,9 @@ void Plotter::moveToXY() {
 
                     //General command "XM,duration,axisA,axisB<CR>"
                     string message = "XM," + std::to_string(traveltime_ms) + "," + std::to_string(xD) + "," + std::to_string(yD) + "\r";
+                    if (debugMode) {
+                        cout << "Motor X: " + std::to_string(motorX) + "  Motor Y: " + std::to_string(motorY) << " traveltime_ms: " << std::to_string(traveltime_ms) << endl;
+                    }
                     int length = message.length();
                     char char_array[length + 1];
                     strcpy(char_array, message.c_str());
@@ -448,26 +458,32 @@ void Plotter::zero() {
     }
 }
 
-// Do we need this?
-// This is for adding paint or water
+// TODO: Rewrite this
+// I think all these todo items are points
+void Plotter::checkServiceBrush(ofPolyline currentLine) {
+    // 1) move to first x,y position in line
+    // 2) brush down
+    // 3) move to next x, y position
+    // 4) repeat step 3 for all following points
+    // 5) brush up
+    if (serviceBrush() == false) {
+        if (ofGetElapsedTimeMillis() > nextMoveTime) {
+//            vector<ofVec3f> points = currentLine.getVertices();
 
-// I think all the todo items are points
-//void Plotter::checkServiceBrush() {
-//    if (serviceBrush() == false) {
-//        if (ofGetElapsedTimeMillis() > nextMoveTime) {
-//            Boolean actionItem = false;
-//            int intTemp = -1;
-//            float inputTemp = -1.0;
-//            PVector toDoItem;
+            for (auto & v : currentLine.getVertices()) {
+                v.x += ofRandom(-0.5, 0.5);
+                v.y += ofRandom(-0.5, 0.5);
+            }
+
+            int intTemp = -1;
+            float inputTemp = -1.0;
 //
-//            if ((ToDoList.length > (indexDone + 1))   && (!paused)) {
-//                actionItem = true;
+            if ((currentLine.size() > (indexDone + 1))   && (!paused)) {
 //                toDoItem = ToDoList[1 + indexDone];
 //                inputTemp = toDoItem.x;
-//                indexDone++;
-//            }
-//
-//            if (actionItem) {  // Perform next action from ToDoList::
+                indexDone++;
+            }
+
 //
 //                if (inputTemp >= 0) { // Move the carriage to draw a path segment!
 //                    toDoItem = ToDoList[indexDone];
@@ -486,38 +502,9 @@ void Plotter::zero() {
 //                    }
 //
 //                    lastPosition = toDoItem;
-//
-//                    /*
-//                     IF next item in ToDoList is ALSO a move, then calculate the next move and queue it to the EBB at this time.
-//                     Save the duration of THAT move as "SubsequentWaitTime."
-//
-//                     When the first (pre-existing) move completes, we will check to see if SubsequentWaitTime is defined (i.e., >= 0).
-//                     If SubsequentWaitTime is defined, then (1) we add that value to the NextMoveTime:
-//
-//                     NextMoveTime = millis() + SubsequentWaitTime;
-//                     SubsequentWaitTime = -1;
-//
-//                     We also (2) queue up that segment to be drawn.
-//
-//                     We also (3) queue up the next move, if there is one that could be queued.
-//
-//                     */
-//                } else {
-//                    intTemp = round(-1 * inputTemp);
-//
-//                    if ((intTemp > 9) && (intTemp < 20)) {  // Change paint color
-//                        intTemp -= 10;
-//                    } else if (intTemp == 30) {
-//                        raiseBrush();
-//                    } else if (intTemp == 31) {
-//                        lowerBrush();
-//                    } else if (intTemp == 35) {
-//                        moveToXY(0, 0);
-//                    }
-//                }
-//            }
-//        }
-//}
+            }
+        }
+}
 
 
 Boolean Plotter::serviceBrush() {
@@ -548,6 +535,10 @@ Boolean Plotter::serviceBrush() {
     return serviceStatus;
 }
 
+
+// TODO: Delete this?
+// This is all on screen drawing??
+// This allows redrawing on screen.
 
 //void Plotter::drawToDoList() {
 //    // Erase all painting on main image background, and draw the existing "ToDo" list

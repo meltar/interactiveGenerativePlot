@@ -92,10 +92,12 @@ class Plotter {
     void setup();
     void raiseBrush();
     void lowerBrush();
-    void checkServiceBrush();
+    void checkServiceBrush(ofPolyline line);
     Boolean serviceBrush();
     void motorsOff();
     void moveRelativeXY(int xD, int yD);
+    void moveToXY2(int xLoc, int yLoc);
+
     void moveToXY(int xLoc, int yLoc);
     void moveToXY();
     ofVec2f getMotorPixelPos();
