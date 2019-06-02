@@ -4,8 +4,8 @@
 #include "tree.hh"
 #include "plotter.h"
 
-#define _CONNECT_TO_AXIDRAW_
-#define _CONNECT_TO_ARDUINO_
+// #define _CONNECT_TO_AXIDRAW_
+// #define _CONNECT_TO_ARDUINO_
 
 struct Triangle {
     ofVec2f pointA;
@@ -41,9 +41,11 @@ public:
     vector<ofPolyline> lines;
     vector<ofPolyline> linesCurrent;
     tree<Triangle> tr;
-    tree<Triangle>::iterator top, old, loc;
-
+    tree<Triangle>::iterator top;
+//    tree<Triangle>::leaf_iterator iter;
     unsigned long actualTime, delayTimer;
+    float maxTime;
+    ofImage img;
 private:
 
     void scanSerial();

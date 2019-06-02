@@ -340,7 +340,6 @@ void Plotter::moveToXY(int xLoc, int yLoc) {
 
 void Plotter::moveToXY() {
     int traveltime_ms;
-     cout << "MOVING??? step 1" << endl;
     // Absolute move in motor coordinates, with XY limit checking, time management, etc.
     // Use MoveToXY(int xLoc, int yLoc) to set destinations.
 
@@ -350,8 +349,6 @@ void Plotter::moveToXY() {
         moveStatus = 1;  // Flag this move as not yet completed.
     } else
     {
-        cout << "MOVING??? step 2" << endl;
-
         if ((moveDestX < 0) || (moveDestY < 0))
         {
             // Destination has not been set up correctly.
@@ -359,8 +356,6 @@ void Plotter::moveToXY() {
             moveDestX = -1;
             moveDestY = -1;
         } else {
-            cout << "MOVING??? step 3" << endl;
-
             moveStatus = -1;
             if (moveDestX > motorMaxX)
                 moveDestX = motorMaxX;
@@ -380,7 +375,6 @@ void Plotter::moveToXY() {
                 cout << "moveDestY: " + std::to_string(moveDestY) + ", motorY: " + std::to_string(motorY) + ",  yD: " + std::to_string(yD) + ", motorMaY: " + std::to_string(motorMaxY) << endl;
             }
             if ((xD != 0) || (yD != 0)){
-                cout << "MOVING??? step 4" << endl;
 
                 motorX = moveDestX;
                 motorY = moveDestY;
@@ -394,8 +388,6 @@ void Plotter::moveToXY() {
                 // because of the relatively low framerate that the program runs at.
 
                 if (serialOnline) {
-                    cout << "MOVING??? step 5" << endl;
-
                     if (reverseMotorX)
                         xD *= -1;
                     if (reverseMotorY)
@@ -466,6 +458,8 @@ void Plotter::checkServiceBrush(ofPolyline currentLine) {
     // 3) move to next x, y position
     // 4) repeat step 3 for all following points
     // 5) brush up
+
+    // Handle pausing
     if (serviceBrush() == false) {
         if (ofGetElapsedTimeMillis() > nextMoveTime) {
 //            vector<ofVec3f> points = currentLine.getVertices();

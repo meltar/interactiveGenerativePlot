@@ -13,19 +13,21 @@ void ofApp::setup(){
 
 
     ofBackground(0);
-    ofColor(255);
-//    ofColor(0);
+//    ofColor(255, 0, 130);
+    ofColor(127);
 //    ofSeedRandom(0);
 
-    ofPolyline outline;
-    outline.addVertex(0,0);
-    outline.addVertex(0, ofGetHeight());
-    outline.addVertex(ofGetWidth(), ofGetHeight());
-    outline.addVertex(ofGetWidth(), 0);
-    outline.addVertex(0,0);
-    lines.push_back(outline);
-    linesCurrent.push_back(outline);
+//    ofPolyline outline;
+//    outline.addVertex(0,0);
+//    outline.addVertex(0, ofGetHeight());
+//    outline.addVertex(ofGetWidth(), ofGetHeight());
+//    outline.addVertex(ofGetWidth(), 0);
+//    outline.addVertex(0,0);
+//    lines.push_back(outline);
+//    linesCurrent.push_back(outline);
+
     setupTriangles();
+    maxTime = 120000;
 }
 
 //--------------------------------------------------------------
@@ -34,105 +36,155 @@ void ofApp::update(){
         readSensors();
     #endif
 
+
     // wait between generation calls
     actualTime = ofGetElapsedTimeMillis();
+//    if (actualTime < maxTime) {
+        if (true) {
+        if (actualTime - delayTimer >= 20) {
+    //    generateNext = true;
 
-    // TODO: if there is nothing left to draw, generate next division
-    // Set timer to 2 sec
-//    if (actualTime - delayTimer >= 2000) {
-    if (generateNext) {
-        generateNext = false;
-        delayTimer = ofGetElapsedTimeMillis();
-//        cout << "2 sec" << endl;
-        // Iterate through triangle tree leaf nodes
-        tree<Triangle>::leaf_iterator iter=tr.begin_leaf();
-        while (tr.is_valid(iter)) {
-            if (tr.depth(iter) < 25 && (*iter).canGenerate){
-                vector<Triangle> results;
-                int type = ofRandom(3);
-//                type = 2;
-                switch (type){
-                    case 0:
-                        results = divideTriangleByTwo(iter);
-                        break;
-                    case 1:
-                        results = divideTriangleByFour(iter);
-                        break;
-                    case 2:
-                        results = nestTriangle(iter);
-                        break;
-//                    case 3:
-//                        results = divideTriangleByThree(iter);
-//                        break;
-                    default:
-                        break;
-                }
-
-                // use the current iterator location for appending children
-                tree<Triangle>::leaf_iterator append_iter = iter;
-
-                // advance to the next node
-                iter++;
-
-                // add new generated triangles
-                for (int i = 0; i < results.size(); i++) {
-                    if (tr.depth(append_iter) > 4 && ofRandom(100) < 5) {
-                        results[i].canGenerate = false;
+        if (generateNext) {
+            generateNext = true;
+            delayTimer = ofGetElapsedTimeMillis();
+            // Iterate through triangle tree leaf nodes
+            tree<Triangle>::leaf_iterator iter=tr.begin_leaf();
+            while (tr.is_valid(iter)) {
+                if (tr.depth(iter) < 15 && (*iter).canGenerate){
+                    vector<Triangle> results;
+                    int type = ofRandom(8);
+                    switch (type){
+                        case 0:
+                        case 1:
+                        case 2:
+                            results = divideTriangleByTwo(iter);
+                            break;
+                        case 3:
+                        case 4:
+                            results = divideTriangleByFour(iter);
+                            break;
+                        case 5:
+                            results = nestTriangle(iter);
+                            break;
+    //                    case 3:
+    //                        results = divideTriangleByThree(iter);
+    //                        break;
+//                        case 2:
+//                            (*iter).canGenerate = false;
+//                            break;
+                        default:
+                            break;
                     }
-                    if (tr.depth(append_iter) > 12) {
-                        results[i].canGenerate = false;
+
+                    // use the current iterator location for appending children
+                    tree<Triangle>::leaf_iterator append_iter = iter;
+
+                    // advance to the next node
+                    iter++;
+
+                    // add new generated triangles
+                    for (int i = 0; i < results.size(); i++) {
+                        if (tr.depth(append_iter) > 4 && ofRandom(100) < 5) {
+                            results[i].canGenerate = false;
+                        }
+                        if (tr.depth(append_iter) > 12) {
+                            results[i].canGenerate = false;
+                        }
+                        tr.append_child(append_iter, results[i]);
                     }
-                    tr.append_child(append_iter, results[i]);
+                } else {
+                    iter++;
                 }
-            } else {
-                iter++;
             }
         }
+            if (!linesCurrent.empty()) {
+                ofPolyline current = linesCurrent.front();
+                lines.push_back(current);
+                linesCurrent.erase(linesCurrent.begin());
+                if (actualTime > 60000){
+                    current = linesCurrent.front();
+                    lines.push_back(current);
+                    linesCurrent.erase(linesCurrent.begin());
+                    ofPolyline current = linesCurrent.front();
+                    lines.push_back(current);
+                    linesCurrent.erase(linesCurrent.begin());
+                }
+            }
+        }
+    } else {
+        maxTime += 120000;
+        delayTimer = ofGetElapsedTimeMillis();
+        lines.clear();
+        linesCurrent.clear();
+        tr.clear();
+//        iter = tr.begin_leaf();
+        setupTriangles();
+        ofSleepMillis(1000);
     }
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
 
-    ofBeginSaveScreenAsSVG("output.svg");
+//    ofColor(255, 0, 130);
+//    ofBeginSaveScreenAsSVG("output.svg");
     // draw all lines on the screen
     for(int i = 0; i < lines.size(); i++){
+//        ofSleepMillis(500);
+//        ofSetColor(127 + i/75, 50, 25 + i/100);
+//        if(i % 5 == 0){
+//            ofSetColor(255, 100, 140);
+//        } else {
+//            ofSetColor(127 + lines.size()*.005, 50 + lines.size()*.00005, 25 + lines.size()*.01);
+//        }
+        if(i % 5 == 0){
+            ofSetColor(0,  255, 140);
+        } else {
+            ofSetColor(0 + lines.size()*.00005, 127 + lines.size()*.005, 25 + lines.size()*.01);
+        }
         lines[i].draw();
     }
-    ofEndSaveScreenAsSVG();
+//    ofEndSaveScreenAsSVG();
 
-    // draw new lines with AxiDraw
-    while (!linesCurrent.empty())
-    {
-        ofPolyline current = linesCurrent.back();
-        // TODO: send instructions to AxiDraw
-        linesCurrent.pop_back();
-    }
+//    // draw new lines with AxiDraw
+//    if (actualTime -  >= 1000) {
+//        if (!linesCurrent.empty())
+//        {
+//            ofPolyline current = linesCurrent.back();
+//            // TODO: send instructions to AxiDraw
+//            lines.push_back(current);
+//    //        current.draw();
+//            linesCurrent.pop_back();
+//        }
+//    }
 }
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
     switch (key){
         case ' ':
-            plotter.motorsOff();
+            //plotter.motorsOff();
             break;
         case 'u':
-            plotter.raiseBrush();
+            //plotter.raiseBrush();
             break;
         case 'd':
-            plotter.lowerBrush();
+            //plotter.lowerBrush();
             break;
         case 'n':
             generateNext = true;
             break;
         case 'p':
-            plotter.pause();
+            //plotter.pause();
             break;
         case 'h':
-            plotter.raiseBrush();
-            plotter.moveToXY(0, 0);
+            //plotter.raiseBrush();
+            //plotter.moveToXY(0, 0);
             linesCurrent.clear();
             break;
+        case 'x':
+            img.grabScreen(0, 0 , ofGetWidth(), ofGetHeight());
+            img.save("screenshot.png");
     }
 }
 
@@ -331,27 +383,28 @@ void ofApp::setupTriangles(){
     float height= ofGetHeight();
 
     float adjustment = ofRandom(350, 350);
-    int side = ofRandom(1, 4);
+    int side = ofRandom(1, 5);
 
     // set up iterator to add triangles
     top = tr.begin();
 
     // TODO: control adjustment with sensors
+    side = 1;
     switch (side)
     {
         case 1: // top
-            x1 = 0;
-            y1 = height;
+            x1 = 10;
+            y1 = height - 10;
 
             x2 = width/2 + ofRandom(-width/4, width/4);
-            y2 = 0;
+            y2 = 10;
 
-            x3 = width;
-            y3 = height;
+            x3 = width-10;
+            y3 = height-10;
 
             tr.insert(top, { ofVec2f(x1, y1), ofVec2f(x2, y2), ofVec2f(x3, y3), true });
-            tr.insert(top, { ofVec2f(0, 0), ofVec2f(x2, y2), ofVec2f(x1, y1), true });
-            tr.insert(top, { ofVec2f(x3, y3), ofVec2f(x2, y2), ofVec2f(width, 0), true });
+            tr.insert(top, { ofVec2f(10, 10), ofVec2f(x2, y2), ofVec2f(x1, y1), true });
+            tr.insert(top, { ofVec2f(x3, y3), ofVec2f(x2, y2), ofVec2f(width-10, 10), true });
             break;
         case 2: // left
             x1 = width;
@@ -400,8 +453,11 @@ void ofApp::setupTriangles(){
     ofPolyline divider;
     divider.addVertex(x1, y1);
     divider.addVertex(x2, y2);
+    linesCurrent.push_back(divider);
+    divider.clear();
+    divider.addVertex(x2, y2);
     divider.addVertex(x3, y3);
-    lines.push_back(divider);
+//    lines.push_back(divider);
     linesCurrent.push_back(divider);
 }
 
@@ -439,7 +495,7 @@ vector<Triangle> ofApp::divideTriangleByTwo(tree<Triangle>::iterator pos) {
     ofPolyline divider;
     divider.addVertex(newPointA.x, newPointA.y);
     divider.addVertex(newPointX, newPointY);
-    lines.push_back(divider);
+//    lines.push_back(divider);
     linesCurrent.push_back(divider);
 
     return newTriangles;
@@ -502,9 +558,19 @@ vector<Triangle> ofApp::divideTriangleByFour(tree<Triangle>::iterator pos) {
     ofPolyline divider;
     divider.addVertex(midpointABX, midpointABY);
     divider.addVertex(midpointBCX, midpointBCY);
+    linesCurrent.push_back(divider);
+    divider.clear();
+    divider.addVertex(midpointBCX, midpointBCY);
+    divider.addVertex(midpointBCX, midpointBCY);
+    linesCurrent.push_back(divider);
+    divider.clear();
+    divider.addVertex(midpointBCX, midpointBCY);
+    divider.addVertex(midpointCAX, midpointCAY);
+    linesCurrent.push_back(divider);
+    divider.clear();
     divider.addVertex(midpointCAX, midpointCAY);
     divider.addVertex(midpointABX, midpointABY);
-    lines.push_back(divider);
+//    lines.push_back(divider);
     linesCurrent.push_back(divider);
 
     return newTriangles;
@@ -541,11 +607,18 @@ vector<Triangle> ofApp::nestTriangle(tree<Triangle>::iterator pos) {
     ofPolyline divider;
     divider.addVertex(newPointA.x, newPointA.y);
     divider.addVertex(newPointB.x, newPointB.y);
+    linesCurrent.push_back(divider);
+    divider.clear();
+    divider.addVertex(newPointB.x, newPointB.y);
+    divider.addVertex(newPointC.x, newPointC.y);
+    linesCurrent.push_back(divider);
+    divider.clear();
     divider.addVertex(newPointC.x, newPointC.y);
     divider.addVertex(newPointA.x, newPointA.y);
-
-    lines.push_back(divider);
     linesCurrent.push_back(divider);
+
+//    lines.push_back(divider);
+//    linesCurrent.push_back(divider);
     return newTriangles;
 }
 
